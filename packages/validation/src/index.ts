@@ -81,3 +81,8 @@ const tradeBase=z.object({reference:code,warehouseId:uuid,lines:z.array(tradeLin
 export const purchaseSchema=tradeBase.extend({supplierId:uuid}).strict();
 export const saleSchema=tradeBase.extend({counterparty:name}).strict();
 export type TradeInput={reference:string;warehouseId:string;supplierId?:string;counterparty?:string;lines:z.infer<typeof tradeLineSchema>[]};
+export const registerSchema=z.object({
+ companySlug:z.string().trim().toLowerCase().min(3).max(64).regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/),
+ companyName:name, name, email, password:passwordSchema,
+}).strict();
+export type RegisterInput=z.infer<typeof registerSchema>;

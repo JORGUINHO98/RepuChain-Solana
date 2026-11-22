@@ -13,7 +13,8 @@ export async function POST(request:NextRequest){
   if(!sameOrigin(request))return json({message:"Origen no permitido"},403);
   try{
     const body=await request.json();
-    const response=await upstream("/auth/login",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)});
+    const register=body.register===true; delete body.register;
+    const response=await upstream(register?"/auth/register":"/auth/login",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)});
     const result=await response.json();
     if(!response.ok)return json({message:result.message??"No se pudo iniciar sesión"},response.status);
     const output=json({authenticated:true});

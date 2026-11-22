@@ -3,11 +3,14 @@ import { Throttle } from "@nestjs/throttler";
 import { AuthService } from "../services/auth.service";
 import { CurrentUser, Public } from "../../../common/auth.decorators";
 import { ZodPipe } from "../../../common/validation.pipe";
-import { loginSchema, refreshSchema, type LoginInput } from "@repuchain/validation";
+import { loginSchema, refreshSchema, registerSchema, type RegisterInput, type LoginInput } from "@repuchain/validation";
 import type { AuthenticatedUser } from "@repuchain/shared-types";
 @Controller("auth")
 export class AuthController {
   constructor(@Inject(AuthService) private readonly auth: AuthService) {}
+  @Public() @Post("register") @Header("Cache-Control","no-store")
+  @Throttle({default:{limit:5,ttl:3600000}})
+  register(@Body(new ZodPipe(registerSchema)) input:RegisterInput){return this.auth.register(input);}
   @Public() @Post("login") @HttpCode(200) @Header("Cache-Control", "no-store")
   @Throttle({ default: { limit: 10, ttl: 60000 } })
   login(@Body(new ZodPipe(loginSchema)) input: LoginInput) { return this.auth.login(input); }

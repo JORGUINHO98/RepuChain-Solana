@@ -37,6 +37,16 @@ La publicación web en Vercel y la prueba física Android están pendientes. No 
 
 Fase 7: 92 pruebas correctas y preparación para GitHub/Vercel. Consulta [la guía de entrega](docs/development/phase-7.md). La publicación y la prueba física Android siguen pendientes.
 
+## Acceso para el jurado
+
+En la pantalla inicial, elegir **Crear cuenta para probar**. Introducir nombre, nombre e identificador único de empresa, correo y contraseña de al menos 12 caracteres. Al terminar se inicia sesión y se abre el panel.
+
+Cada registro crea una empresa vacía con su propio administrador. No permite acceder al inventario de otras empresas. Conservar el identificador elegido para futuros inicios de sesión. No se envía correo de verificación ni se ha implementado recuperación de contraseña.
+
+La nueva empresa permite probar el catálogo y los movimientos; sus evidencias quedan pendientes hasta configurar un worker autorizado para ella. Para comprobar blockchain ya confirmada, usar las transacciones de demostración enlazadas arriba.
+
+Las contraseñas demo locales no se publican. El registro requiere API y base de datos disponibles: GitHub contiene el código, no ejecuta la aplicación. La URL pública de la web aún está pendiente de despliegue.
+
 ## Arranque en WSL2
 
 En este equipo PostgreSQL 16.15 está instalado directamente en Ubuntu.
