@@ -23,7 +23,7 @@ Desde WSL, preparar PostgreSQL y los archivos locales mediante setup:env, db:mig
 Omitir --blockchain para no requerir Rust/Anchor/Solana. Se necesita instalar primero con pnpm install --frozen-lockfile. El informe no sustituye la prueba física.
 
 ## GitHub
-No hay remoto configurado actualmente. Falta la URL exacta del repositorio.
+Repositorio público: https://github.com/JORGUINHO98/RepuChain-Solana. Código y documentación subidos a main.
 Revisar los archivos antes del primer commit. .env, blockchain/.keys, archivos keypair, dependencias y compilados están excluidos. Nunca incluir claves privadas ni contraseñas.
 Subir el monorepo completo, incluido pnpm-lock.yaml y los paquetes compartidos; no subir únicamente apps/web.
 El workflow de GitHub valida la aplicación y PostgreSQL. Las pruebas Solana se ejecutan con el comando local separado.
@@ -60,4 +60,4 @@ En una empresa de prueba: crear repuesto/lote, registrar compra y venta, comprob
 Las confirmaciones se presentan únicamente cuando el worker las verifica.
 No se enviaron fondos ni transacciones nuevas a Devnet en esta fase.
 No hay APK, publicación en tiendas, facturación fiscal, devoluciones ni garantías. Esas funciones del objetivo general permanecen fuera de la implementación actual.
-Falta definir la URL GitHub y el alojamiento de API/base/worker para efectuar la publicación.
+Falta definir el alojamiento de API/base/worker y publicar la web.

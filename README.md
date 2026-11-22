@@ -1,160 +1,209 @@
-# RepuChain
+# RepuChain — Inventario y trazabilidad automotriz en Solana
 
-Cada repuesto tiene una historia. Cada movimiento deja una huella.
+**Cada repuesto tiene una historia. Cada movimiento deja una huella.**
 
-**Fase 6 implementada: aplicación móvil con autenticación, escáner QR y movimientos autorizados.** Incluye consulta de repuestos, lotes, stock y evidencias; conserva envíos pendientes para reintentarlos con la misma clave. El panel web permite descargar etiquetas QR.
+Proyecto final del **Advanced Bootcamp — Solana Engineering Track**. RepuChain administra repuestos, lotes y movimientos de inventario y registra evidencias criptográficas en Solana. PostgreSQL conserva los datos comerciales; la blockchain permite comprobar el historial registrado.
 
-La web de fase 5 y la integración Solana de fase 4 siguen disponibles. El worker blockchain se ejecuta por separado. La exportación móvil Android/iOS y las pruebas automatizadas pasan; falta validar cámara, almacenamiento seguro e interfaz en un dispositivo Android.
+## Datos de entrega
 
-Consulta la [guía de fase 6 y prueba en Android](docs/development/phase-6.md) y el [alcance de fase 5](docs/development/phase-5.md).
+| Dato | Valor |
+| --- | --- |
+| Repositorio público | [JORGUINHO98/RepuChain-Solana](https://github.com/JORGUINHO98/RepuChain-Solana) |
+| Red | Solana Devnet |
+| Program ID | `3hgkgx5V7UgU1Dac8R6ZCx2ZYs1PeHPUphFgRmG52GWv` |
+| Código del programa | [declare_id! y programa Rust](blockchain/programs/repu_chain/src/lib.rs) |
+| Programa desplegado | [Abrir en Solana Explorer](https://explorer.solana.com/address/3hgkgx5V7UgU1Dac8R6ZCx2ZYs1PeHPUphFgRmG52GWv?cluster=devnet) |
+| Web pública | Pendiente de despliegue; ejecución local disponible |
 
-## Entrega Advanced Bootcamp — Solana Engineering Track
+El Program ID identifica el programa, no una wallet de usuario.
 
-**Proyecto:** RepuChain · Inventario y trazabilidad automotriz.
-**Categoría propuesta:** aplicaciones empresariales / trazabilidad (seleccionar la opción equivalente disponible en el formulario).
-**Repositorio público:** https://github.com/JORGUINHO98/RepuChain-Solana
+## Evidencia del funcionamiento
 
-**Program ID en Solana Devnet:**
-~~~
-3hgkgx5V7UgU1Dac8R6ZCx2ZYs1PeHPUphFgRmG52GWv
-~~~
-Corresponde a declare_id! en [lib.rs](blockchain/programs/repu_chain/src/lib.rs).
-[Ver programa en Explorer](https://explorer.solana.com/address/3hgkgx5V7UgU1Dac8R6ZCx2ZYs1PeHPUphFgRmG52GWv?cluster=devnet).
+### 1. Despliegue en Devnet
 
-### Evidencia verificable
-La demostración utiliza datos sintéticos. El comprobante conserva hashes, cuentas y firmas verificadas el 21 de noviembre de 2026:
-[comprobante de la demostración](blockchain/deployments/phase-4-demo.json).
+El comprobante del despliegue conserva Program ID, firma, tamaño y hash del binario:
+[blockchain/deployments/devnet.json](blockchain/deployments/devnet.json).
 
-- [Recepción del lote en Devnet](https://explorer.solana.com/tx/cq35KsK8wCfNjRHFSUFRJrCKknB8PTcqNgobkLBMoPeiwjiFj2Xvk68H4dWhBEfU8PiskpDFsMWPyJD3ZC3TEzt?cluster=devnet).
-- [Movimiento del lote en Devnet](https://explorer.solana.com/tx/4i5s9haKoQtdNv2FL6xZQdmqGrHmVsSdJ5X8FgqG9sZjH8qdQ2grxkL6voDFTq1vvMaF5bBv3VQkDp3SvnxQADZW?cluster=devnet).
+- [Transacción de despliegue](https://explorer.solana.com/tx/2uPv2CzKHcEHVpLqDjar4GSMmuoRb4vgNRJ8ZNvnV2dSXJBXjU1pY8YatybMw3AL66WDTnAUJs5WMEW3XHT2D98b?cluster=devnet).
+- Tamaño registrado: **254328 bytes**.
+- SHA-256 del binario registrado: `9d26e2238c4e71fa46e533ea357b71ca9bacfed2650bd3b0f64b8440e2cb57a8`.
+- Comprobación del despliegue registrada el **21 de noviembre de 2026**.
 
-PostgreSQL conserva el inventario y los datos comerciales. Una cola transaccional registra evidencias en Solana con hashes encadenados y secuencia; el worker verifica la cuenta y transacción antes de marcar CONFIRMED. El programa controla autoridades y custodia. Las pruebas incluyen alteración de hashes, cuentas de otra empresa, revocación, doble envío y recuperación de respuestas RPC perdidas.
+### 2. Recepción y movimiento reales
 
-La batería local de fase 7 pasó 92 pruebas: 25 de lógica, 44 HTTP, 20 Rust y 3 de integración con validador local. Véase [guía de entrega](docs/development/phase-7.md) para reproducirlas.
-La publicación web en Vercel y la prueba física Android están pendientes. No se requiere publicar claves privadas para verificar estas evidencias.
+La demostración usa datos sintéticos y transacciones reales de **Devnet**, sin valor monetario real.
+[Comprobante completo con firmas, cuentas y hashes](blockchain/deployments/phase-4-demo.json).
 
-## Entrega
+| Evento | Evidencia pública |
+| --- | --- |
+| Recepción del lote, secuencia 0 | [Transacción](https://explorer.solana.com/tx/cq35KsK8wCfNjRHFSUFRJrCKknB8PTcqNgobkLBMoPeiwjiFj2Xvk68H4dWhBEfU8PiskpDFsMWPyJD3ZC3TEzt?cluster=devnet) · [Cuenta de evidencia](https://explorer.solana.com/address/9YtWiVj3j3T4GCTSb9EPhJphtnf1uurZRHeaGCr5aMuf?cluster=devnet) |
+| Movimiento, secuencia 1 | [Transacción](https://explorer.solana.com/tx/4i5s9haKoQtdNv2FL6xZQdmqGrHmVsSdJ5X8FgqG9sZjH8qdQ2grxkL6voDFTq1vvMaF5bBv3VQkDp3SvnxQADZW?cluster=devnet) · [Cuenta de evidencia](https://explorer.solana.com/address/J29zYszH3ys1gfJzTZk3oAMXRpzexZryWU86TjNsM1DX?cluster=devnet) |
 
-Fase 7: 92 pruebas correctas y preparación para GitHub/Vercel. Consulta [la guía de entrega](docs/development/phase-7.md). La publicación y la prueba física Android siguen pendientes.
+Lote de la demostración: `39c9648b-3503-4fd4-89d3-afcd8d71e490`.
 
-## Acceso para el jurado
+**Cómo revisar la evidencia:** abrir los enlaces con la red Devnet, comprobar el resultado de las transacciones y contrastar las firmas y cuentas con el comprobante JSON. Los hashes y su encadenamiento se comprueban mediante el cliente y las pruebas del programa descritas abajo. El JSON es un registro de la ejecución; los enlaces permiten contrastarlo con la red.
 
-En la pantalla inicial, elegir **Crear cuenta para probar**. Introducir nombre, nombre e identificador único de empresa, correo y contraseña de al menos 12 caracteres. Al terminar se inicia sesión y se abre el panel.
+**Verified Build y security.txt:** aún no se configuraron el distintivo de compilación reproducible de Explorer ni los metadatos security.txt. Las pruebas y comprobaciones del despliegue documentadas aquí no equivalen a ese distintivo ni a una auditoría externa.
 
-Cada registro crea una empresa vacía con su propio administrador. No permite acceder al inventario de otras empresas. Conservar el identificador elegido para futuros inicios de sesión. No se envía correo de verificación ni se ha implementado recuperación de contraseña.
+### 3. Pruebas automatizadas
 
-La nueva empresa permite probar el catálogo y los movimientos; sus evidencias quedan pendientes hasta configurar un worker autorizado para ella. Para comprobar blockchain ya confirmada, usar las transacciones de demostración enlazadas arriba.
+Resultados locales del 22 de noviembre de 2026:
 
-Las contraseñas demo locales no se publican. El registro requiere API y base de datos disponibles: GitHub contiene el código, no ejecuta la aplicación. La URL pública de la web aún está pendiente de despliegue.
+| Suite | Resultado observado | Qué comprueba |
+| --- | --- | --- |
+| Lógica TypeScript | 25 pruebas correctas | Validación, hashes, QR y sesión móvil |
+| API HTTP y PostgreSQL | 48 pruebas correctas | Autenticación, registro, aislamiento, inventario, compras y ventas |
+| Programa Rust | 20 pruebas correctas | Autoridades, custodia, secuencias, hashes y rechazo de alteraciones |
+| Integración blockchain local | 3 pruebas correctas | API → base → programa SBF, firmas y recuperación RPC |
 
-## Arranque en WSL2
+Son **96 pruebas**: la batería de fase 7 tenía 92 y se añadieron cuatro pruebas de registro de evaluadores. Las pruebas Rust y blockchain corresponden a la ejecución de fase 7; las suites de aplicación se volvieron a ejecutar al añadir registro.
 
-En este equipo PostgreSQL 16.15 está instalado directamente en Ubuntu.
-Docker sigue siendo una alternativa, no es necesario para el entorno actual.
+También pasaron compilación web/API, exportación JavaScript Android/iOS, validación Prisma, compatibilidad Expo y comprobaciones de sesión web. No se presenta la exportación móvil como una prueba en teléfono.
+
+Fuentes de las pruebas:
+[tests/integration](tests/integration) · [tests/e2e](tests/e2e) · [tests/blockchain](tests/blockchain) · [pruebas Rust](blockchain/programs/repu_chain/tests).
+
+No se adjuntan capturas o vídeos simulados. La evidencia disponible consiste en transacciones públicas, comprobantes y pruebas reproducibles.
+
+## Funcionalidades implementadas
+
+- Registro de una empresa de prueba con administrador propio; acceso y permisos por empresa.
+- Catálogo, marcas, categorías, proveedores y compatibilidad vehicular.
+- Almacenes, lotes, existencias, entradas, salidas y transferencias.
+- Compras y ventas con importes decimales y actualización transaccional del inventario.
+- Dashboard, auditoría y etiquetas QR descargables.
+- Cola Outbox, reintentos e idempotencia de movimientos.
+- Consulta de evidencia, hashes, estado y enlace a Solana Explorer.
+- App Expo: autenticación, cámara QR, consulta y registro de movimientos.
+
+## Arquitectura
+
+```mermaid
+flowchart LR
+    Web[Next.js] --> API[NestJS: permisos y validación]
+    Mobile[React Native / Expo] --> API
+    API --> DB[(PostgreSQL: inventario y Outbox)]
+    DB --> Worker[Worker de evidencias]
+    Worker --> Solana[Programa Rust / Anchor en Devnet]
+    Solana --> Verify[Confirmación y comprobación de cuenta]
+    Verify --> DB
+```
+
+Una operación registra stock, movimiento, auditoría y Outbox en una transacción. El worker construye el contenido canónico, calcula hashes, firma, envía y comprueba la transacción y la cuenta antes de marcar **CONFIRMED**. Una evidencia pendiente no se presenta como confirmada.
+
+Los precios y datos comerciales permanecen en PostgreSQL. El programa usa cuentas PDA, secuencia y controles de autoridad. Las pruebas rechazan cuentas de otra empresa, operadores revocados y hashes alterados. La evidencia registra el contenido digital; no certifica por sí sola la autenticidad física de un repuesto.
+
+| Capa | Tecnología |
+| --- | --- |
+| Web | Next.js 16, React 19, TypeScript |
+| Móvil | React Native, Expo SDK 58 |
+| API | NestJS, JWT y permisos por rol |
+| Datos | PostgreSQL, Prisma |
+| Blockchain | Rust, Anchor, Solana Devnet, @solana/kit |
+| Repositorio | pnpm workspaces y Turborepo |
+
+Las versiones exactas están fijadas en los manifiestos, lockfiles y archivos de toolchain.
+
+## Ejecutar el proyecto
+
+### Requisitos
+
+Node y pnpm según `.nvmrc` y `package.json`, PostgreSQL accesible y WSL2/Ubuntu para el flujo documentado. Para las pruebas blockchain también se necesitan Rust, Anchor y Solana según los archivos del repositorio.
 
 ```bash
-cd ~/projects/repu-chain
-source ~/.nvm/nvm.sh
-nvm use
-sudo service postgresql start
+git clone https://github.com/JORGUINHO98/RepuChain-Solana.git
+cd RepuChain-Solana
 pnpm install --frozen-lockfile
 pnpm setup:env
+```
+
+Configurar la conexión PostgreSQL en los archivos locales de entorno y crear las bases siguiendo la [guía WSL2](docs/development/wsl2.md). No utilizar contraseñas de ejemplo para una publicación.
+
+```bash
 pnpm db:migrate
 pnpm db:seed
 pnpm dev
 ```
 
-- Web: http://127.0.0.1:3000
-- API: http://127.0.0.1:4000/api/v1
-- Salud del proceso: /api/v1/health
-- Conexión PostgreSQL: /api/v1/health/ready
+- Web local: http://127.0.0.1:3000
+- API local: http://127.0.0.1:4000/api/v1
+- Disponibilidad PostgreSQL: /api/v1/health/ready
 
-En otra terminal, `pnpm demo:api` inicia sesión con las credenciales locales,
-consulta los datos de demostración y cierra la sesión sin imprimir tokens.
-La empresa es `demo` y el usuario inicial `admin@repuchain.local`.
-La contraseña aleatoria se conserva en `database/.env` como
-`SEED_ADMIN_PASSWORD`. El seed no cambia la contraseña de usuarios existentes.
+### Acceso del jurado
 
-## Funcionalidades de la API
+En la página inicial elegir **Crear cuenta para probar**. Introducir nombre, empresa, identificador único, correo y contraseña de al menos 12 caracteres. La aplicación crea una empresa vacía y abre el panel. Conservar el identificador para volver a entrar.
 
-- JWT de 15 minutos, refresh tokens rotativos y sesiones de 7 días.
-- Roles ADMIN, MANAGER, OPERATOR y VIEWER; permisos verificados en cada petición.
-- Aislamiento por empresa en consultas y relaciones PostgreSQL.
-- Productos con SKU, precios decimales, categorías, marcas y compatibilidad vehicular.
-- Proveedores, almacenes y lotes; altas y modificaciones donde corresponde.
-- Entradas, salidas y transferencias con transacciones, idempotencia y auditoría.
-- Restricciones contra stock negativo e historial protegido contra UPDATE/DELETE.
-- Consultas paginadas y validación estricta de entradas.
+No se permite registrar un administrador dentro de una empresa existente. No hay correo de verificación ni recuperación de contraseña implementados.
 
-El stock inicial es cero. Solo cambia mediante movimientos autorizados.
-El hash requestHash identifica reintentos: no constituye evidencia blockchain.
+Como alternativa local, el seed crea la empresa `demo`; el correo y la contraseña se conservan en `database/.env` como `SEED_ADMIN_EMAIL` y `SEED_ADMIN_PASSWORD`. **Las contraseñas y claves privadas no se publican.**
 
-## Verificaciones
+Una empresa recién creada no tiene worker blockchain configurado. Puede probar inventario, pero sus evidencias quedarán pendientes. Para evaluar confirmaciones ya realizadas, consultar la demostración Devnet enlazada arriba.
+
+### Recorrido funcional
+
+1. Crear proveedor, almacén y repuesto.
+2. Crear un lote del repuesto.
+3. Registrar una compra y comprobar el aumento de existencias.
+4. Registrar una venta y comprobar la disminución.
+5. Intentar una salida superior al stock: debe rechazarse sin cambios parciales.
+6. Abrir trazabilidad y consultar el estado real de las evidencias.
+7. En Lotes, elegir **Ver QR** para descargar su etiqueta.
+8. Crear un usuario VIEWER y comprobar que puede consultar, pero no registrar movimientos.
+
+Usar datos de prueba para esta demostración.
+
+### Ejecutar las verificaciones
+
+Con la base de pruebas preparada según la guía:
 
 ```bash
+pnpm db:test:init
 pnpm check
 pnpm test:integration
 pnpm smoke
-pnpm db:check
 pnpm mobile:check
-```
-
-Las pruebas HTTP usan `repuchain_test`, separada de la base de desarrollo.
-`pnpm setup:env` prepara `.env.test`. Ver [guía WSL2](docs/development/wsl2.md)
-para crear esa base en una instalación nueva. La prueba exige un nombre terminado
-en `_test`, usa empresas nuevas por ejecución y conserva el historial de pruebas.
-
-`pnpm build` compila web/API/paquetes y exporta JavaScript móvil para Android/iOS.
-No produce APK/IPA ni verifica un dispositivo físico.
-`pnpm dev:mobile` inicia Expo; la configuración del teléfono está en la guía de fase 6.
-
-## Programa blockchain
-
-Requiere Rust 1.100.0, Anchor CLI 1.2.2 y Solana CLI 4.1.2 en WSL.
-
-```bash
+pnpm db:check
 pnpm blockchain:test
-pnpm blockchain:smoke:local
-pnpm blockchain:deploy:devnet
-```
-
-La prueba local inicia su propio validador, despliega el binario probado,
-comprueba la confirmación y compara el programa descargado. Al terminar cierra
-el validador y conserva el comprobante en `target/localnet-deployment-receipt.json`.
-Necesita la clave local del programa en `blockchain/.keys/program.json`.
-
-El comando Devnet comprueba red, claves, pruebas y saldo antes de desplegar.
-El despliegue quedó confirmado el 21 de noviembre de 2026. El comprobante está
-en [blockchain/deployments/devnet.json](blockchain/deployments/devnet.json).
-[Ver programa en Solana Explorer](https://explorer.solana.com/address/3hgkgx5V7UgU1Dac8R6ZCx2ZYs1PeHPUphFgRmG52GWv?cluster=devnet).
-
-## Integración y evidencias
-
-```bash
-pnpm test:integration
 pnpm test:blockchain:integration
 ```
 
-El worker se inicia por separado con una empresa y un firmante configurados.
-La [guía de fase 4](docs/blockchain/phase-4.md) explica el arranque, backfill,
-reintentos y endpoints. `pnpm blockchain:demo:devnet` ejecuta o recupera una
-demostración con datos sintéticos; utiliza SOL de prueba de la wallet local.
+También existe `node scripts/verify-release.mjs --blockchain`, que ejecuta las verificaciones y escribe resultados y tiempos en `reports/release-check.json`. Se detiene ante un fallo.
 
-Comprobante real: [demo Devnet](blockchain/deployments/phase-4-demo.json).
+Las pruebas HTTP usan una base terminada en `_test`, crean empresas independientes y conservan su historial. Las pruebas blockchain de integración usan un validador local; no requieren publicar claves del despliegue Devnet. Consultar los requisitos de claves locales en la [guía blockchain](docs/blockchain/phase-3.md).
 
-## Estructura y documentación
+## Configuración y despliegue
 
-- [Integración blockchain de fase 4](docs/blockchain/phase-4.md)
-- [Resultados de fase 4](docs/development/phase-4-report.md)
-- [Programa blockchain de fase 3](docs/blockchain/phase-3.md)
-- [Resultados de fase 3](docs/development/phase-3-report.md)
-- [Arquitectura de fase 2](docs/architecture/phase-2.md)
+| Servicio | Variables principales |
+| --- | --- |
+| API | DATABASE_URL, JWT_SECRET, HOST, PORT, WEB_ORIGIN |
+| Web | API_INTERNAL_URL |
+| Móvil | EXPO_PUBLIC_API_URL |
+| Worker | DATABASE_URL, BLOCKCHAIN_COMPANY_ID, BLOCKCHAIN_SIGNER_PATH, BLOCKCHAIN_NETWORK, BLOCKCHAIN_RPC_URL |
+
+Los valores privados se configuran fuera de Git. El worker usa un firmante técnico autorizado; no se publican claves personales.
+
+La web está preparada para Vercel con raíz `apps/web`. La API, PostgreSQL y el worker necesitan alojamiento y configuración propios. GitHub contiene el código y no ejecuta automáticamente la app.
+[Guía de entrega y despliegue](docs/development/phase-7.md).
+
+## Estado y límites
+
+- Programa y demostración desplegados en Devnet.
+- Web y API probadas localmente; publicación web pendiente.
+- Android/iOS exportan JavaScript; prueba física Android aplazada.
+- No hay APK publicado ni validación visual completa.
+- No hay auditoría de seguridad independiente ni ensayo de carga.
+- Facturación fiscal, devoluciones, garantías y recuperación de contraseña no están implementadas.
+- Los workflows están incluidos; los resultados de pruebas indicados arriba son **locales**, no una afirmación de CI aprobada en GitHub.
+
+## Documentación
+
+- [Arquitectura](docs/architecture/phase-2.md)
 - [Modelo de datos](docs/database/phase-2.md)
-- [Contrato y ejemplos de API](docs/api/phase-2.md)
+- [API](docs/api/phase-2.md)
+- [Programa Anchor](docs/blockchain/phase-3.md)
+- [Worker, hashes y reintentos](docs/blockchain/phase-4.md)
+- [Panel web](docs/development/phase-5.md)
+- [Aplicación móvil y prueba Android](docs/development/phase-6.md)
+- [Entrega y despliegue](docs/development/phase-7.md)
 - [Variables de entorno](docs/development/environment.md)
-- [Instalación WSL2](docs/development/wsl2.md)
-- [Resultados y entrega](docs/development/phase-2-report.md)
 - [Contribuir](CONTRIBUTING.md)
-
-La CI está configurada, pero no se ha ejecutado en GitHub. El programa se ha
-desplegado y verificado en un validador local y en Devnet.
