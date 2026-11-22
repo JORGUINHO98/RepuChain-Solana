@@ -1,0 +1,63 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "globalDependencies": [
+    ".env",
+    "packages/config/tsconfig.base.json"
+  ],
+  "tasks": {
+    "build": {
+      "dependsOn": [
+        "^build"
+      ],
+      "outputs": [
+        "dist/**",
+        ".next/**",
+        "!.next/cache/**"
+      ],
+      "env": [
+        "NEXT_PUBLIC_API_URL",
+        "EXPO_PUBLIC_API_URL",
+        "NEXT_TELEMETRY_DISABLED"
+      ]
+    },
+    "typecheck": {
+      "dependsOn": [
+        "^build"
+      ],
+      "outputs": []
+    },
+    "dev": {
+      "cache": false,
+      "persistent": true,
+      "dependsOn": [
+        "^build"
+      ],
+      "passThroughEnv": [
+        "DATABASE_URL",
+        "JWT_SECRET",
+        "HOST",
+        "PORT",
+        "WEB_ORIGIN",
+        "NODE_ENV"
+      ]
+    },
+    "@repuchain/database#typecheck": {
+      "dependsOn": [
+        "build"
+      ],
+      "outputs": []
+    },
+    "@repuchain/database#build": {
+      "dependsOn": [
+        "^build"
+      ],
+      "outputs": [
+        "dist/**",
+        "src/generated/**"
+      ],
+      "passThroughEnv": [
+        "DATABASE_URL"
+      ]
+    }
+  }
+}

@@ -1,0 +1,97 @@
+name: Blockchain tests
+on:
+  push:
+    paths:
+      - "blockchain/**"
+      - "packages/blockchain-client/**"
+      - "apps/api/**"
+      - "database/**"
+      - "tests/**"
+      - "scripts/test-integration.mjs"
+      - "vitest.blockchain.config.mts"
+      - "pnpm-lock.yaml"
+      - "Cargo.toml"
+      - "Cargo.lock"
+      - "Anchor.toml"
+      - "rust-toolchain.toml"
+      - "scripts/test-blockchain.mjs"
+      - "scripts/check-evidence-vectors.mjs"
+      - ".github/workflows/blockchain.yml"
+  pull_request:
+    paths:
+      - "blockchain/**"
+      - "packages/blockchain-client/**"
+      - "apps/api/**"
+      - "database/**"
+      - "tests/**"
+      - "scripts/test-integration.mjs"
+      - "vitest.blockchain.config.mts"
+      - "pnpm-lock.yaml"
+      - "Cargo.toml"
+      - "Cargo.lock"
+      - "Anchor.toml"
+      - "rust-toolchain.toml"
+      - "scripts/test-blockchain.mjs"
+      - "scripts/check-evidence-vectors.mjs"
+      - ".github/workflows/blockchain.yml"
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  program:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    services:
+      postgres:
+        image: postgres:17.7-bookworm
+        env:
+          POSTGRES_USER: repuchain
+          POSTGRES_PASSWORD: repuchain_local_only
+          POSTGRES_DB: repuchain
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U repuchain -d repuchain"
+          --health-interval 5s --health-timeout 3s --health-retries 12
+    env:
+      CARGO_BUILD_JOBS: "2"
+      TEST_DATABASE_URL: postgresql://repuchain:repuchain_local_only@localhost:5432/repuchain_test?schema=public
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+      - name: Install pinned Rust and Anchor
+        run: |
+          rustup toolchain install 1.100.0 --profile minimal --component rustfmt --component clippy
+          cargo install anchor-cli --version 1.2.2 --locked
+      - name: Install pinned Solana tools
+        run: |
+          curl --fail --location --retry 3 https://github.com/anza-xyz/agave/releases/download/v4.1.2/solana-release-x86_64-unknown-linux-gnu.tar.bz2 -o "$RUNNER_TEMP/agave.tar.bz2"
+          tar -xjf "$RUNNER_TEMP/agave.tar.bz2" -C "$RUNNER_TEMP"
+          echo "$RUNNER_TEMP/solana-release/bin" >> "$GITHUB_PATH"
+      - name: Check formatting
+        run: cargo fmt --all --check
+      - name: Build SBF, generate IDL and run tests
+        run: node scripts/test-blockchain.mjs
+      - name: Check committed IDL matches the program
+        run: git diff --exit-code -- blockchain/idl/repu_chain.json
+      - name: Prepare application and test database
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm setup:env
+          pnpm db:test:init
+      - name: Test API, outbox and real local validator
+        run: |
+          pnpm test
+          pnpm test:integration
+          pnpm test:blockchain:integration
+      - uses: actions/upload-artifact@v4
+        with:
+          name: repuchain-sbf-tested
+          path: |
+            target/deploy/repu_chain.so
+            blockchain/idl/repu_chain.json
+            target/blockchain-test-receipt.json
+          if-no-files-found: error

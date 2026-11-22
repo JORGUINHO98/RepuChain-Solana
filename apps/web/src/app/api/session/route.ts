@@ -1,0 +1,30 @@
+import {NextRequest} from "next/server";
+import {COOKIE,sameOrigin,json,upstream,clearSession} from "../../../lib/server-api";
+export async function GET(request:NextRequest){
+  const token=request.cookies.get(COOKIE)?.value;
+  if(!token)return json({message:"Inicia sesión para continuar"},401);
+  try{
+    const response=await upstream("/auth/me",{headers:{Authorization:"Bearer "+token}});
+    const result=json(await response.json(),response.status);
+    return response.status===401?clearSession(result):result;
+  }catch{return json({message:"No se pudo conectar con la API"},503);}
+}
+export async function POST(request:NextRequest){
+  if(!sameOrigin(request))return json({message:"Origen no permitido"},403);
+  try{
+    const body=await request.json();
+    const response=await upstream("/auth/login",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)});
+    const result=await response.json();
+    if(!response.ok)return json({message:result.message??"No se pudo iniciar sesión"},response.status);
+    const output=json({authenticated:true});
+    output.cookies.set(COOKIE,result.accessToken,{httpOnly:true,sameSite:"strict",secure:request.nextUrl.protocol==="https:",path:"/",maxAge:result.expiresIn});
+    return output;
+  }catch{return json({message:"No se pudo iniciar sesión. Comprueba la conexión."},503);}
+}
+export async function DELETE(request:NextRequest){
+  if(!sameOrigin(request))return json({message:"Origen no permitido"},403);
+  const token=request.cookies.get(COOKIE)?.value;
+  try{if(token)await upstream("/auth/logout",{method:"POST",headers:{Authorization:"Bearer "+token}});}
+  catch{return clearSession(json({message:"Sesión local cerrada; no se pudo contactar con el servidor para revocarla."},503));}
+  return clearSession(json({signedOut:true}));
+}

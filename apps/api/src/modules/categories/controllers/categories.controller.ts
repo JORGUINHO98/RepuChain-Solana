@@ -1,0 +1,12 @@
+import { Body, Controller, Get, Inject, Post, Query } from "@nestjs/common";
+import type { AuthenticatedUser } from "@repuchain/shared-types";
+import { namedEntitySchema, listQuerySchema, type ListQuery } from "@repuchain/validation";
+import { CurrentUser, RequirePermission } from "../../../common/auth.decorators";
+import { ZodPipe } from "../../../common/validation.pipe";
+import { CategoriesService } from "../services/categories.service";
+@Controller("categories")
+export class CategoriesController {
+  constructor(@Inject(CategoriesService) private readonly service: CategoriesService) {}
+  @Get() @RequirePermission("catalog:read") list(@CurrentUser() user: AuthenticatedUser, @Query(new ZodPipe(listQuerySchema)) query: ListQuery) { return this.service.list(user,query); }
+  @Post() @RequirePermission("catalog:write") create(@CurrentUser() user: AuthenticatedUser, @Body(new ZodPipe(namedEntitySchema)) input:{name:string}) { return this.service.create(user,input.name); }
+}

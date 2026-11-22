@@ -1,0 +1,29 @@
+{
+  "expo": {
+    "name": "RepuChain",
+    "slug": "repuchain",
+    "scheme": "repuchain",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "dark",
+    "plugins": [
+      "expo-router",
+      "expo-secure-store",
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Permite a RepuChain leer los códigos QR de tus lotes.",
+          "barcodeScannerEnabled": true,
+          "recordAudioAndroid": false,
+          "microphonePermission": false
+        }
+      ]
+    ],
+    "ios": {
+      "bundleIdentifier": "com.repuchain.app"
+    },
+    "android": {
+      "package": "com.repuchain.app"
+    }
+  }
+}

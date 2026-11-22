@@ -1,0 +1,11 @@
+{
+  "network": "devnet",
+  "programId": "3hgkgx5V7UgU1Dac8R6ZCx2ZYs1PeHPUphFgRmG52GWv",
+  "upgradeAuthority": "8FreXnhKCs7VeTtWz8BhqDsEzREASeWDFj1zZLV7ZCqv",
+  "signature": "2uPv2CzKHcEHVpLqDjar4GSMmuoRb4vgNRJ8ZNvnV2dSXJBXjU1pY8YatybMw3AL66WDTnAUJs5WMEW3XHT2D98b",
+  "confirmation": "confirmed",
+  "binarySha256": "9d26e2238c4e71fa46e533ea357b71ca9bacfed2650bd3b0f64b8440e2cb57a8",
+  "binaryBytes": 254328,
+  "verifiedAt": "2026-11-21T12:13:00.974Z",
+  "explorer": "https://explorer.solana.com/address/3hgkgx5V7UgU1Dac8R6ZCx2ZYs1PeHPUphFgRmG52GWv?cluster=devnet"
+}

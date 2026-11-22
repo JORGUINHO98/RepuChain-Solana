@@ -1,0 +1,31 @@
+import {describe,it,expect,vi} from "vitest";
+import {randomUUID} from "node:crypto";
+import {batchQr,parseBatchQr} from "../../packages/utils/src/qr";
+import {SessionClient,type PrivateStore} from "../../apps/mobile/src/services/session-core";
+import {readPending} from "../../apps/mobile/src/services/movement-draft";
+const base="http://127.0.0.1:4000/api/v1";
+const user={id:randomUUID(),companyId:randomUUID(),name:"Test",permissions:["inventory:read"]};
+const tokens=(n=1)=>({accessToken:"access"+n,refreshToken:"refresh"+n,expiresIn:900,tokenType:"Bearer"});
+const response=(body:unknown,status=200)=>new Response(JSON.stringify(body),{status,headers:{"Content-Type":"application/json"}});
+function fixture(expired=false){
+ let value:string|null=JSON.stringify({base,tokens:tokens(),expiresAt:Date.now()+(expired?-1000:900000)});
+ const store:PrivateStore={get:async()=>value,set:async v=>{value=v;},remove:async()=>{value=null;}};
+ return {store,value:()=>value};
+}
+describe("QR y movimientos móviles",()=>{
+ it("codifica y lee empresa y lote sin datos comerciales",()=>{const batch=randomUUID();expect(parseBatchQr(batchQr(user.companyId,batch))).toEqual({companyId:user.companyId,batchId:batch});});
+ it("rechaza URL externas, parámetros extra, versiones y UUID inválidos",()=>{for(const v of ["https://evil.invalid",batchQr(user.companyId,randomUUID())+"&url=https://evil.invalid",batchQr(user.companyId,randomUUID()).replace("&v=1","&v=2"),"repuchain://batch/test?company=test&v=1","x".repeat(241)])expect(()=>parseBatchQr(v)).toThrow();});
+ it("restaura el cuerpo y la clave exacta del movimiento",()=>{const scope={base,userId:user.id,companyId:user.companyId};const p={...scope,key:randomUUID(),body:{type:"IN",batchId:randomUUID(),quantity:3,destinationWarehouseId:randomUUID(),reason:"Recepción"}};expect(readPending(JSON.stringify(p),scope)).toEqual(p);expect(()=>readPending(JSON.stringify(p),{...scope,userId:randomUUID()})).toThrow();expect(()=>readPending(JSON.stringify(p),{...scope,base:"https://other.invalid"})).toThrow();});
+ it("rechaza cantidades y almacenes inválidos al recuperar un envío",()=>{const scope={base,userId:user.id,companyId:user.companyId};expect(()=>readPending(JSON.stringify({...scope,key:randomUUID(),body:{type:"OUT",batchId:randomUUID(),quantity:-1,reason:"Salida"}}),scope)).toThrow();});
+});
+describe("Sesión móvil",()=>{
+ it("restaura una sesión y solo envía el acceso al servidor configurado",async()=>{const f=fixture();const transport=vi.fn(async(url,opts)=>{expect(url).toBe(base+"/auth/me");expect(opts.headers.Authorization).toBe("Bearer access1");return response(user);});const c=new SessionClient(base,f.store,transport as any);await c.restore();expect(c.user?.id).toBe(user.id);expect(transport).toHaveBeenCalledTimes(1);await expect(c.request("https://evil.invalid")).rejects.toThrow();});
+ it("comparte una sola renovación entre peticiones simultáneas",async()=>{const f=fixture();let refreshes=0;const transport=vi.fn(async(url,opts)=>{if(url.endsWith("/auth/refresh")){refreshes++;await new Promise(r=>setTimeout(r,10));return response(tokens(2));}if(url.endsWith("/auth/me"))return response(user);return opts.headers.Authorization==="Bearer access1"?response({message:"expired"},401):response({ok:true});});const c=new SessionClient(base,f.store,transport as any);await c.restore();await Promise.all([c.request("/inventory"),c.request("/inventory"),c.request("/inventory")]);expect(refreshes).toBe(1);expect(JSON.parse(f.value()!).tokens.refreshToken).toBe("refresh2");});
+ it("renueva una sesión vencida antes de consultar el perfil",async()=>{const f=fixture(true);const paths:string[]=[];const c=new SessionClient(base,f.store,(async(url)=>{paths.push(String(url));return response(String(url).endsWith("/refresh")?tokens(2):user);}) as any);await c.restore();expect(paths).toEqual([base+"/auth/refresh",base+"/auth/me"]);});
+ it("elimina una sesión revocada y no entra en un bucle de refresh",async()=>{const f=fixture(true);const fetcher=vi.fn(async()=>response({message:"Sesión inválida"},401));const c=new SessionClient(base,f.store,fetcher as any);await expect(c.restore()).rejects.toThrow();expect(f.value()).toBeNull();expect(fetcher).toHaveBeenCalledTimes(1);});
+ it("no reutiliza refresh si se pierde su respuesta",async()=>{const f=fixture(true);const fetcher=vi.fn(async()=>{throw new Error("offline");});const c=new SessionClient(base,f.store,fetcher as any);await expect(c.restore()).rejects.toThrow();expect(f.value()).toBeNull();await expect(c.request("/inventory")).rejects.toThrow();expect(fetcher).toHaveBeenCalledTimes(1);});
+ it("conserva la sesión cuando solo falla una consulta por conexión",async()=>{const f=fixture();const c=new SessionClient(base,f.store,(async()=>{throw new Error("offline");}) as any);await expect(c.restore()).rejects.toThrow();expect(f.value()).not.toBeNull();});
+ it("cierra localmente aunque el servidor esté desconectado",async()=>{const f=fixture();let offline=false;const c=new SessionClient(base,f.store,(async()=>{if(offline)throw new Error("offline");return response(user);}) as any);await c.restore();offline=true;expect(await c.logout()).toContain("no se pudo");expect(c.user).toBeNull();expect(f.value()).toBeNull();});
+ it("no envía tokens guardados para otra API",async()=>{const f=fixture();const fetcher=vi.fn();const c=new SessionClient("https://other.invalid",f.store,fetcher);await c.restore();expect(fetcher).not.toHaveBeenCalled();expect(f.value()).toBeNull();});
+ it("impide que un refresh en curso restaure una sesión ya cerrada",async()=>{const f=fixture();let finish:((r:Response)=>void)|undefined;const fetcher=vi.fn(async(url,opts)=>{if(url.endsWith("/auth/me"))return response(user);if(url.endsWith("/auth/logout"))return response({revoked:true});if(url.endsWith("/auth/refresh"))return new Promise<Response>(resolve=>{finish=resolve;});return response({},401);});const c=new SessionClient(base,f.store,fetcher as any);await c.restore();const pending=c.request("/inventory").catch(()=>{});await vi.waitFor(()=>expect(finish).toBeDefined());await c.logout();finish!(response(tokens(2)));await pending;expect(f.value()).toBeNull();expect(c.user).toBeNull();});
+});

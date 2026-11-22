@@ -1,0 +1,12 @@
+packages:
+  - apps/*
+  - packages/*
+  - database
+
+onlyBuiltDependencies:
+  - '@nestjs/core'
+  - '@prisma/engines'
+  - esbuild
+  - prisma
+  - sharp
+  - unrs-resolver

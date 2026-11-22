@@ -1,0 +1,12 @@
+[workspace]
+members = ["blockchain/programs/repu_chain"]
+resolver = "2"
+
+[workspace.dependencies]
+anchor-lang = { version = "=1.2.2", default-features = false, features = ["solana-v4", "init-if-needed"] }
+solana-sha256-hasher = { version = "=3.1.0", features = ["sha2"] }
+
+[profile.release]
+overflow-checks = true
+lto = "fat"
+codegen-units = 1

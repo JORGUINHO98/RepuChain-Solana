@@ -1,0 +1,50 @@
+{
+  "name": "repuchain",
+  "version": "0.2.0",
+  "private": true,
+  "packageManager": "pnpm@10.34.9",
+  "engines": {
+    "node": ">=24.22.3 <25",
+    "pnpm": ">=10.34.9 <11"
+  },
+  "scripts": {
+    "dev": "turbo run dev --filter=@repuchain/web --filter=@repuchain/api",
+    "dev:web": "turbo run dev --filter=@repuchain/web",
+    "dev:api": "turbo run dev --filter=@repuchain/api",
+    "dev:mobile": "turbo run dev --filter=@repuchain/mobile",
+    "build": "turbo run build",
+    "typecheck": "turbo run typecheck",
+    "test": "vitest run",
+    "check": "pnpm typecheck && pnpm test && pnpm db:validate && pnpm build",
+    "db:up": "docker compose up -d --wait postgres",
+    "db:down": "docker compose stop postgres",
+    "db:validate": "pnpm --filter @repuchain/database validate",
+    "db:check": "pnpm --filter @repuchain/database check",
+    "doctor": "node scripts/doctor.mjs",
+    "setup:env": "node scripts/setup-env.mjs",
+    "mobile:check": "pnpm --filter @repuchain/mobile exec expo install --check",
+    "smoke": "node scripts/smoke.mjs",
+    "blockchain:check": "node scripts/check-solana.cjs",
+    "db:generate": "pnpm --filter @repuchain/database generate",
+    "db:seed": "turbo run build --filter=@repuchain/database && pnpm --filter @repuchain/database seed",
+    "test:integration": "node --env-file-if-exists=.env.test scripts/test-integration.mjs",
+    "db:migrate": "pnpm --filter @repuchain/database migrate:deploy",
+    "demo:api": "node scripts/demo-api.mjs",
+    "test:web": "node scripts/test-web-session.mjs",
+    "db:test:init": "node --env-file-if-exists=.env.test database/scripts/create-test-db.mjs",
+    "blockchain:test": "node scripts/test-blockchain.mjs",
+    "blockchain:build": "anchor build",
+    "blockchain:backfill": "node apps/api/dist/modules/blockchain/backfill.js",
+    "blockchain:demo:devnet": "node scripts/demo-blockchain.mjs",
+    "blockchain:worker": "node apps/api/dist/modules/blockchain/worker.js",
+    "test:blockchain:integration": "node --env-file-if-exists=.env.test scripts/test-integration.mjs --blockchain",
+    "blockchain:smoke:local": "node scripts/smoke-localnet.mjs",
+    "blockchain:deploy:devnet": "node scripts/deploy-devnet.mjs"
+  },
+  "devDependencies": {
+    "@types/node": "24.19.2",
+    "typescript": "5.9.3",
+    "turbo": "2.11.13",
+    "vitest": "5.1.1"
+  }
+}

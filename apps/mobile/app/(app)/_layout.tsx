@@ -1,0 +1,4 @@
+import {Stack,Redirect} from "expo-router";
+import {useAuth} from "../../src/modules/auth/provider";
+import {Screen,Loading,colors} from "../../src/components/ui";
+export default function Layout(){const {user,ready}=useAuth();if(!ready)return <Screen><Loading/></Screen>;if(!user)return <Redirect href="/login"/>;return <Stack screenOptions={{headerStyle:{backgroundColor:colors.bg},headerTintColor:colors.text,contentStyle:{backgroundColor:colors.bg}}}><Stack.Screen name="home" options={{title:"RepuChain"}}/><Stack.Screen name="inventory" options={{title:"Lotes e inventario"}}/><Stack.Screen name="products" options={{title:"Repuestos"}}/><Stack.Screen name="scanner" options={{title:"Escanear QR"}}/><Stack.Screen name="batch/[id]" options={{title:"Detalle del lote"}}/><Stack.Screen name="movement" options={{title:"Registrar movimiento"}}/></Stack>;}

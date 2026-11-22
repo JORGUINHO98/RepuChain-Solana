@@ -1,0 +1,399 @@
+generator client {
+  provider     = "prisma-client"
+  output       = "../src/generated"
+  moduleFormat = "cjs"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum MovementType {
+  IN
+  OUT
+  TRANSFER
+}
+
+model Company {
+  tradeDocuments TradeDocument[]
+  id         String           @id @default(uuid()) @db.Uuid
+  slug       String           @unique @db.VarChar(64)
+  name       String           @db.VarChar(160)
+  currency   String           @default("BOB") @db.Char(3)
+  createdAt  DateTime         @default(now())
+  blockchainBinding BlockchainBinding?
+  users      User[]
+  roles      Role[]
+  categories Category[]
+  brands     Brand[]
+  products   Product[]
+  vehicles   VehicleModel[]
+  suppliers  Supplier[]
+  warehouses Warehouse[]
+  batches    InventoryBatch[]
+  audits     AuditLog[]
+
+  @@map("companies")
+}
+
+model Permission {
+  code        String           @id @db.VarChar(64)
+  description String
+  roles       RolePermission[]
+
+  @@map("permissions")
+}
+
+model Role {
+  id          String           @id @default(uuid()) @db.Uuid
+  companyId   String           @db.Uuid
+  name        String           @db.VarChar(32)
+  company     Company          @relation(fields: [companyId], references: [id], onDelete: Restrict)
+  permissions RolePermission[]
+  users       User[]
+
+  @@unique([id, companyId])
+  @@unique([companyId, name])
+  @@map("roles")
+}
+
+model RolePermission {
+  roleId         String     @db.Uuid
+  permissionCode String     @db.VarChar(64)
+  role           Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission     Permission @relation(fields: [permissionCode], references: [code], onDelete: Restrict)
+
+  @@id([roleId, permissionCode])
+  @@map("role_permissions")
+}
+
+model User {
+  tradeDocuments TradeDocument[]
+  id           String              @id @default(uuid()) @db.Uuid
+  companyId    String              @db.Uuid
+  roleId       String              @db.Uuid
+  email        String              @db.VarChar(254)
+  name         String              @db.VarChar(160)
+  passwordHash String
+  active       Boolean             @default(true)
+  createdAt    DateTime            @default(now())
+  updatedAt    DateTime            @updatedAt
+  company      Company             @relation(fields: [companyId], references: [id], onDelete: Restrict)
+  role         Role                @relation(fields: [roleId, companyId], references: [id, companyId], onDelete: Restrict)
+  sessions     Session[]
+  movements    InventoryMovement[]
+  audits       AuditLog[]
+
+  @@unique([id, companyId])
+  @@unique([companyId, email])
+  @@index([companyId, active])
+  @@map("users")
+}
+
+model Session {
+  id        String         @id @default(uuid()) @db.Uuid
+  userId    String         @db.Uuid
+  companyId String         @db.Uuid
+  createdAt DateTime       @default(now())
+  expiresAt DateTime
+  revokedAt DateTime?
+  user      User           @relation(fields: [userId, companyId], references: [id, companyId], onDelete: Restrict)
+  tokens    RefreshToken[]
+
+  @@index([userId, companyId, revokedAt])
+  @@map("sessions")
+}
+
+model RefreshToken {
+  id        String    @id @default(uuid()) @db.Uuid
+  sessionId String    @db.Uuid
+  tokenHash String    @unique @db.Char(64)
+  usedAt    DateTime?
+  expiresAt DateTime
+  createdAt DateTime  @default(now())
+  session   Session   @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@index([sessionId])
+  @@map("refresh_tokens")
+}
+
+model Category {
+  id        String    @id @default(uuid()) @db.Uuid
+  companyId String    @db.Uuid
+  name      String    @db.VarChar(120)
+  createdAt DateTime  @default(now())
+  company   Company   @relation(fields: [companyId], references: [id], onDelete: Restrict)
+  products  Product[]
+
+  @@unique([id, companyId])
+  @@unique([companyId, name])
+  @@map("categories")
+}
+
+model Brand {
+  id        String    @id @default(uuid()) @db.Uuid
+  companyId String    @db.Uuid
+  name      String    @db.VarChar(120)
+  createdAt DateTime  @default(now())
+  company   Company   @relation(fields: [companyId], references: [id], onDelete: Restrict)
+  products  Product[]
+
+  @@unique([id, companyId])
+  @@unique([companyId, name])
+  @@map("brands")
+}
+
+model Product {
+  id              String                 @id @default(uuid()) @db.Uuid
+  companyId       String                 @db.Uuid
+  sku             String                 @db.VarChar(64)
+  name            String                 @db.VarChar(160)
+  description     String                 @default("") @db.VarChar(2000)
+  categoryId      String?                @db.Uuid
+  brandId         String?                @db.Uuid
+  unitPrice       Decimal                @default(0) @db.Decimal(12, 2)
+  minimumStock    Int                    @default(0)
+  active          Boolean                @default(true)
+  createdAt       DateTime               @default(now())
+  updatedAt       DateTime               @updatedAt
+  company         Company                @relation(fields: [companyId], references: [id], onDelete: Restrict)
+  category        Category?              @relation(fields: [categoryId, companyId], references: [id, companyId], onDelete: Restrict)
+  brand           Brand?                 @relation(fields: [brandId, companyId], references: [id, companyId], onDelete: Restrict)
+  batches         InventoryBatch[]
+  compatibilities ProductCompatibility[]
+
+  @@unique([id, companyId])
+  @@unique([companyId, sku])
+  @@index([companyId, name])
+  @@map("products")
+}
+
+model VehicleModel {
+  id              String                 @id @default(uuid()) @db.Uuid
+  companyId       String                 @db.Uuid
+  make            String                 @db.VarChar(80)
+  model           String                 @db.VarChar(80)
+  yearFrom        Int
+  yearTo          Int
+  company         Company                @relation(fields: [companyId], references: [id], onDelete: Restrict)
+  compatibilities ProductCompatibility[]
+
+  @@unique([id, companyId])
+  @@unique([companyId, make, model, yearFrom, yearTo])
+  @@map("vehicle_models")
+}
+
+model ProductCompatibility {
+  companyId      String       @db.Uuid
+  productId      String       @db.Uuid
+  vehicleModelId String       @db.Uuid
+  product        Product      @relation(fields: [productId, companyId], references: [id, companyId], onDelete: Restrict)
+  vehicle        VehicleModel @relation(fields: [vehicleModelId, companyId], references: [id, companyId], onDelete: Restrict)
+
+  @@id([companyId, productId, vehicleModelId])
+  @@map("product_compatibilities")
+}
+
+model Supplier {
+  tradeDocuments TradeDocument[]
+  id        String           @id @default(uuid()) @db.Uuid
+  companyId String           @db.Uuid
+  code      String           @db.VarChar(64)
+  name      String           @db.VarChar(160)
+  email     String?          @db.VarChar(254)
+  phone     String?          @db.VarChar(40)
+  active    Boolean          @default(true)
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+  company   Company          @relation(fields: [companyId], references: [id], onDelete: Restrict)
+  batches   InventoryBatch[]
+
+  @@unique([id, companyId])
+  @@unique([companyId, code])
+  @@map("suppliers")
+}
+
+model Warehouse {
+  tradeDocuments TradeDocument[]
+  id        String              @id @default(uuid()) @db.Uuid
+  companyId String              @db.Uuid
+  code      String              @db.VarChar(64)
+  name      String              @db.VarChar(160)
+  address   String              @default("") @db.VarChar(500)
+  active    Boolean             @default(true)
+  createdAt DateTime            @default(now())
+  updatedAt DateTime            @updatedAt
+  company   Company             @relation(fields: [companyId], references: [id], onDelete: Restrict)
+  stock     Stock[]
+  outgoing  InventoryMovement[] @relation("SourceWarehouse")
+  incoming  InventoryMovement[] @relation("DestinationWarehouse")
+
+  @@unique([id, companyId])
+  @@unique([companyId, code])
+  @@map("warehouses")
+}
+
+model InventoryBatch {
+  tradeLines TradeLine[]
+  evidenceSequence Int @default(0)
+  evidence EvidenceOutbox[]
+  id         String              @id @default(uuid()) @db.Uuid
+  companyId  String              @db.Uuid
+  productId  String              @db.Uuid
+  supplierId String?             @db.Uuid
+  code       String              @db.VarChar(64)
+  receivedAt DateTime            @default(now())
+  createdAt  DateTime            @default(now())
+  company    Company             @relation(fields: [companyId], references: [id], onDelete: Restrict)
+  product    Product             @relation(fields: [productId, companyId], references: [id, companyId], onDelete: Restrict)
+  supplier   Supplier?           @relation(fields: [supplierId, companyId], references: [id, companyId], onDelete: Restrict)
+  stock      Stock[]
+  movements  InventoryMovement[]
+
+  @@unique([id, companyId])
+  @@unique([companyId, code])
+  @@index([companyId, productId])
+  @@map("inventory_batches")
+}
+
+model Stock {
+  companyId   String         @db.Uuid
+  batchId     String         @db.Uuid
+  warehouseId String         @db.Uuid
+  quantity    Int            @default(0)
+  updatedAt   DateTime       @updatedAt
+  batch       InventoryBatch @relation(fields: [batchId, companyId], references: [id, companyId], onDelete: Restrict)
+  warehouse   Warehouse      @relation(fields: [warehouseId, companyId], references: [id, companyId], onDelete: Restrict)
+
+  @@id([companyId, batchId, warehouseId])
+  @@index([companyId, warehouseId])
+  @@map("stock")
+}
+
+model InventoryMovement {
+  tradeLine TradeLine?
+  @@unique([id,companyId])
+  id                     String         @id @default(uuid()) @db.Uuid
+  companyId              String         @db.Uuid
+  batchId                String         @db.Uuid
+  actorId                String         @db.Uuid
+  type                   MovementType
+  quantity               Int
+  sourceWarehouseId      String?        @db.Uuid
+  destinationWarehouseId String?        @db.Uuid
+  reason                 String         @db.VarChar(500)
+  idempotencyKey         String         @db.Uuid
+  requestHash            String         @db.Char(64)
+  createdAt              DateTime       @default(now())
+  batch                  InventoryBatch @relation(fields: [batchId, companyId], references: [id, companyId], onDelete: Restrict)
+  actor                  User           @relation(fields: [actorId, companyId], references: [id, companyId], onDelete: Restrict)
+  source                 Warehouse?     @relation("SourceWarehouse", fields: [sourceWarehouseId, companyId], references: [id, companyId], onDelete: Restrict)
+  destination            Warehouse?     @relation("DestinationWarehouse", fields: [destinationWarehouseId, companyId], references: [id, companyId], onDelete: Restrict)
+
+  @@unique([companyId, idempotencyKey])
+  @@index([companyId, batchId, createdAt])
+  @@map("inventory_movements")
+}
+
+model AuditLog {
+  id        String   @id @default(uuid()) @db.Uuid
+  companyId String   @db.Uuid
+  actorId   String?  @db.Uuid
+  action    String   @db.VarChar(80)
+  entityId  String   @db.Uuid
+  metadata  Json     @default("{}")
+  createdAt DateTime @default(now())
+  company   Company  @relation(fields: [companyId], references: [id], onDelete: Restrict)
+  actor     User?    @relation(fields: [actorId, companyId], references: [id, companyId], onDelete: Restrict)
+
+  @@index([companyId, createdAt])
+  @@map("audit_logs")
+}
+
+model EvidenceOutbox {
+  id                   String @id @default(uuid()) @db.Uuid
+  companyId            String @db.Uuid
+  batchId              String @db.Uuid
+  eventId              String @db.Uuid
+  sequence             Int
+  canonicalPayload     String
+  payloadHash          String @db.Char(64)
+  status               String @default("PENDING") @db.VarChar(16)
+  attempts             Int @default(0)
+  availableAt          DateTime @default(now())
+  leaseToken           String? @db.Uuid
+  lockedUntil          DateTime?
+  lastError            String? @db.VarChar(80)
+  signature            String? @db.VarChar(88)
+  account              String? @db.VarChar(44)
+  evidenceHash         String? @db.Char(64)
+  confirmedAt          DateTime?
+  createdAt            DateTime @default(now())
+  batch                InventoryBatch @relation(fields:[batchId,companyId], references:[id,companyId], onDelete:Restrict)
+  transactions         EvidenceTransaction[]
+  @@unique([companyId,eventId])
+  @@unique([batchId,sequence])
+  @@index([status,availableAt], map: "evidence_outbox_status_available")
+  @@map("evidence_outbox")
+}
+model EvidenceTransaction {
+  id                   String @id @default(uuid()) @db.Uuid
+  outboxId             String @db.Uuid
+  signature            String @unique @db.VarChar(88)
+  wire                 String
+  lastValidBlockHeight BigInt
+  createdAt            DateTime @default(now())
+  outbox               EvidenceOutbox @relation(fields:[outboxId],references:[id],onDelete:Restrict)
+  @@index([outboxId,createdAt], map: "evidence_transactions_outbox_created")
+  @@map("evidence_transactions")
+}
+model BlockchainBinding {
+  companyId String @id @db.Uuid
+  authority String @db.VarChar(44)
+  programId String @db.VarChar(44)
+  network String @db.VarChar(16)
+  createdAt DateTime @default(now())
+  company Company @relation(fields:[companyId],references:[id],onDelete:Restrict)
+  @@map("blockchain_bindings")
+}
+
+model TradeDocument {
+  id String @id @default(uuid()) @db.Uuid
+  companyId String @db.Uuid
+  actorId String @db.Uuid
+  type String @db.VarChar(8)
+  reference String @db.VarChar(64)
+  supplierId String? @db.Uuid
+  counterparty String @db.VarChar(160)
+  warehouseId String @db.Uuid
+  idempotencyKey String @db.Uuid
+  requestHash String @db.Char(64)
+  total Decimal @db.Decimal(24,2)
+  createdAt DateTime @default(now())
+  company Company @relation(fields:[companyId],references:[id],onDelete:Restrict)
+  actor User @relation(fields:[actorId,companyId],references:[id,companyId],onDelete:Restrict)
+  supplier Supplier? @relation(fields:[supplierId,companyId],references:[id,companyId],onDelete:Restrict)
+  warehouse Warehouse @relation(fields:[warehouseId,companyId],references:[id,companyId],onDelete:Restrict)
+  lines TradeLine[]
+  @@unique([id,companyId])
+  @@unique([companyId,idempotencyKey])
+  @@unique([companyId,type,reference])
+  @@index([companyId,createdAt])
+  @@map("trade_documents")
+}
+model TradeLine {
+  id String @id @default(uuid()) @db.Uuid
+  companyId String @db.Uuid
+  documentId String @db.Uuid
+  batchId String @db.Uuid
+  movementId String @unique @db.Uuid
+  quantity Int
+  unitPrice Decimal @db.Decimal(12,2)
+  total Decimal @db.Decimal(24,2)
+  document TradeDocument @relation(fields:[documentId,companyId],references:[id,companyId],onDelete:Restrict)
+  batch InventoryBatch @relation(fields:[batchId,companyId],references:[id,companyId],onDelete:Restrict)
+  movement InventoryMovement @relation(fields:[movementId,companyId],references:[id,companyId],onDelete:Restrict)
+  @@unique([documentId,batchId])
+  @@unique([movementId,companyId])
+  @@map("trade_lines")
+}
