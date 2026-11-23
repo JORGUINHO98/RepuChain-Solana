@@ -1,5 +1,5 @@
 import {NextRequest} from "next/server";
-import {COOKIE,json,upstream,sameOrigin} from "../../../../lib/server-api";
+import {ApiConfigurationError,COOKIE,json,upstream,sameOrigin} from "../../../../lib/server-api";
 const CHALLENGE="repuchain_wallet_challenge";
 export async function POST(request:NextRequest,{params}:{params:Promise<{action:string}>}){
  if(!sameOrigin(request))return json({message:"Origen no permitido"},403);
@@ -16,5 +16,8 @@ export async function POST(request:NextRequest,{params}:{params:Promise<{action:
    result.cookies.set(CHALLENGE,"",{httpOnly:true,sameSite:"strict",path:"/api/wallet",maxAge:0});
   }
   return result;
- }catch{return json({message:"No se pudo conectar. Vuelve a conectar y firmar un mensaje nuevo."},503);}
+ }catch(error){
+  console.error("Wallet authentication API request failed",error);
+  return json({message:error instanceof ApiConfigurationError?error.message:"No se pudo conectar con la API de autenticación. Comprueba que esté desplegada y que API_INTERNAL_URL apunte a su URL HTTPS."},503);
+ }
 }
