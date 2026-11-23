@@ -14,7 +14,7 @@ Solo se aceptan firmas del mensaje UTF-8 exacto. Una cuenta Ethereum 0x no sirve
 ## Configuración
 Aplicar `pnpm db:migrate` y generar el cliente con `pnpm db:generate`.
 
-En la API, configurar `WALLET_AUTH_ORIGINS` con los orígenes exactos autorizados, separados por comas, sin barra final. Por ejemplo: `https://tu-app.vercel.app`. Si se omite, se usa `WEB_ORIGIN`. No se permiten comodines. En desarrollo también se permiten localhost y 127.0.0.1 en el puerto 3000.
+En la API, configurar `WALLET_AUTH_ORIGINS` con los orígenes exactos autorizados, separados por comas, sin barra final. Por ejemplo: `https://tu-app.vercel.app`. Si se omite, se usa `WEB_ORIGIN`. No se permiten comodines. En desarrollo se permite HTTP desde `localhost`, `127.0.0.1` y `[::1]` en cualquier puerto, para admitir puertos alternativos cuando el 3000 está ocupado.
 
 Las rutas de correo de la API devuelven 403 fuera de NODE_ENV=test. El entorno test mantiene los fixtures históricos de permisos. Nunca publicar la API con NODE_ENV=test. La ruta web anterior devuelve 403 en todos los entornos.
 
@@ -29,3 +29,8 @@ Las rutas de correo de la API devuelven 403 fuera de NODE_ENV=test. El entorno t
 `tests/e2e/wallet.test.ts` verifica firmas, caducidad, origen, reutilización y continuidad del espacio. `pnpm smoke` verifica el flujo HTTP completo con una clave efímera de prueba, cookies y revocación. Esto no sustituye la prueba manual de conexión con una extensión.
 
 Para la prueba manual: abrir la web, conectar y firmar; comprobar el panel; cerrar sesión; repetir con la misma wallet y comprobar que conserva el espacio. Cancelar una firma debe dejar al usuario fuera del panel.
+
+## Conexiones que no responden
+El selector usa primero MetaMask detectado por Wallet Standard; el SDK queda como alternativa. Solo muestra una opción MetaMask. La interfaz diferencia conexión, preparación del reto, firma y verificación. Cada operación de wallet tiene un límite de 60 segundos y el usuario puede cancelar la espera; una respuesta tardía no continúa el flujo cancelado. Cancelar en RepuChain no cierra la ventana de la extensión: cerrar también esa solicitud antes de reintentar.
+
+RPCErr53 / Transport request timed out se presenta como un problema de comunicación con la wallet. No demuestra un fallo de PostgreSQL ni permite afirmar que se completó una firma. La corrección se validó con pruebas automatizadas de selección, timeout y cancelación; la extensión MetaMask real requiere prueba manual. Las alertas de seguridad de la wallet no deben ignorarse.

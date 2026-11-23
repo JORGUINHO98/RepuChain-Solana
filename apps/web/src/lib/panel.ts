@@ -14,7 +14,7 @@ export const sections:Record<Section,SectionInfo>={
  categorias:{title:"Categorías",description:"Agrupa las referencias de tu catálogo.",path:"categories",read:"catalog:read",write:"catalog:write",action:"Nueva categoría",group:"DIRECTORIO"},
  marcas:{title:"Marcas",description:"Fabricantes y marcas de tus repuestos.",path:"brands",read:"catalog:read",write:"catalog:write",action:"Nueva marca",group:"DIRECTORIO"},
  vehiculos:{title:"Compatibilidad vehicular",description:"Modelos y años para vincular a tus repuestos.",path:"vehicles",read:"catalog:read",write:"catalog:write",action:"Nuevo vehículo",group:"DIRECTORIO"},
- usuarios:{title:"Equipo y permisos",description:"Accesos separados por rol y empresa.",path:"users",read:"users:manage",write:"users:manage",action:"Nuevo usuario",group:"CONTROL"},
+ usuarios:{title:"Equipo y permisos",description:"Accesos separados por rol y empresa.",path:"users",read:"users:manage",write:"users:manage",group:"CONTROL"},
  auditoria:{title:"Auditoría",description:"Registro de las operaciones realizadas por tu equipo.",path:"audit",read:"audit:read",group:"CONTROL"},
 };
 export type Row=Record<string,any>;
@@ -22,8 +22,10 @@ export type User={id:string;companyId:string;name:string;email:string;role:strin
 export class ApiError extends Error{constructor(message:string,readonly status:number){super(message);}}
 export async function api<T=any>(path:string,options:RequestInit={}):Promise<T>{
  const response=await fetch(path.startsWith("/api/")?path:"/api/backend/"+path,{...options,cache:"no-store",headers:{"Content-Type":"application/json",...options.headers}});
- const data=await response.json();
- if(!response.ok){if(response.status===401)window.dispatchEvent(new Event("session-expired"));throw new ApiError(Array.isArray(data.message)?data.message.join(". "):data.message??"No se pudo completar la operación",response.status);}
+ if(response.status===401)window.dispatchEvent(new Event("session-expired"));
+ const data=await response.json().catch(()=>null);
+ if(!response.ok){throw new ApiError(Array.isArray(data?.message)?data.message.join(". "):data?.message??"No se pudo completar la operación. Intenta de nuevo.",response.status);}
+ if(data===null)throw new ApiError("El servidor devolvió una respuesta inválida. Intenta de nuevo.",502);
  return data;
 }
 export async function allRows(path:string):Promise<Row[]>{
