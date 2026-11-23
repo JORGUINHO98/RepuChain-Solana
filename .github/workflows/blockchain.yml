@@ -80,7 +80,6 @@ jobs:
       - name: Prepare application and test database
         run: |
           pnpm install --frozen-lockfile
-          pnpm --filter @repuchain/validation build
           pnpm setup:env
           pnpm db:test:init
       - name: Test API, outbox and real local validator
