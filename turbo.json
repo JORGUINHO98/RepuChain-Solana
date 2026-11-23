@@ -38,6 +38,7 @@
         "HOST",
         "PORT",
         "WEB_ORIGIN",
+        "WALLET_AUTH_ORIGINS",
         "NODE_ENV"
       ]
     },

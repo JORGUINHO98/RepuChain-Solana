@@ -68,6 +68,7 @@ model RolePermission {
 }
 
 model User {
+  wallet WalletIdentity?
   tradeDocuments TradeDocument[]
   id           String              @id @default(uuid()) @db.Uuid
   companyId    String              @db.Uuid
@@ -396,4 +397,23 @@ model TradeLine {
   @@unique([documentId,batchId])
   @@unique([movementId,companyId])
   @@map("trade_lines")
+}
+
+model WalletIdentity {
+  address String @id @db.VarChar(44)
+  userId String @unique @db.Uuid
+  user User @relation(fields:[userId],references:[id],onDelete:Restrict)
+  createdAt DateTime @default(now())
+  @@map("wallet_identities")
+}
+model WalletChallenge {
+  id String @id @default(uuid()) @db.Uuid
+  address String @db.VarChar(44)
+  origin String @db.VarChar(255)
+  message String
+  expiresAt DateTime
+  usedAt DateTime?
+  createdAt DateTime @default(now())
+  @@index([expiresAt])
+  @@map("wallet_challenges")
 }

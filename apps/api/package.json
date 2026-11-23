@@ -20,6 +20,7 @@
     "@repuchain/shared-types": "workspace:*",
     "@repuchain/utils": "workspace:*",
     "@repuchain/validation": "workspace:*",
+    "@solana/kit": "8.6.0",
     "dotenv": "17.2.3",
     "qrcode": "1.5.4",
     "reflect-metadata": "0.2.2",

@@ -12,7 +12,7 @@ import { audit } from "../../audit/services/audit";
 export class AuthService {
   private readonly dummyHash = hashPassword(createRefreshToken());
   constructor(@Inject(DatabaseService) private readonly db: DatabaseService, @Inject(JwtService) private readonly jwt: JwtService) {}
-  private async tokens(userId: string, companyId: string, sessionId: string, refreshToken: string): Promise<TokenResponse> {
+  async tokens(userId: string, companyId: string, sessionId: string, refreshToken: string): Promise<TokenResponse> {
     return {
       accessToken: await this.jwt.signAsync({ sub: userId, companyId, sid: sessionId }),
       refreshToken, tokenType: "Bearer", expiresIn: 900,

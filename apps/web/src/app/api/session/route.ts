@@ -9,18 +9,8 @@ export async function GET(request:NextRequest){
     return response.status===401?clearSession(result):result;
   }catch{return json({message:"No se pudo conectar con la API"},503);}
 }
-export async function POST(request:NextRequest){
-  if(!sameOrigin(request))return json({message:"Origen no permitido"},403);
-  try{
-    const body=await request.json();
-    const register=body.register===true; delete body.register;
-    const response=await upstream(register?"/auth/register":"/auth/login",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)});
-    const result=await response.json();
-    if(!response.ok)return json({message:result.message??"No se pudo iniciar sesión"},response.status);
-    const output=json({authenticated:true});
-    output.cookies.set(COOKIE,result.accessToken,{httpOnly:true,sameSite:"strict",secure:request.nextUrl.protocol==="https:",path:"/",maxAge:result.expiresIn});
-    return output;
-  }catch{return json({message:"No se pudo iniciar sesión. Comprueba la conexión."},503);}
+export async function POST(){
+  return json({message:"Usa el acceso con wallet"},403);
 }
 export async function DELETE(request:NextRequest){
   if(!sameOrigin(request))return json({message:"Origen no permitido"},403);

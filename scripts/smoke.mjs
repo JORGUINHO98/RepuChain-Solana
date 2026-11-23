@@ -36,10 +36,12 @@ try {
   const apiPort = await freePort();
   const webPort = await freePort();
   const origin = "http://127.0.0.1:" + webPort;
-  const api = start(["dist/main.js"], "apps/api", { NODE_ENV: "test", PORT: String(apiPort), WEB_ORIGIN: origin, HOST: "127.0.0.1" });
+  const api = start(["dist/main.js"], "apps/api", { NODE_ENV: "development", PORT: String(apiPort), WEB_ORIGIN: origin, HOST: "127.0.0.1" });
   const url = "http://127.0.0.1:" + apiPort + "/api/v1/health";
   const response = await waitFor(url, api);
   assert.deepEqual(await response.json(), { status: "ok", service: "repuchain-api", version: "0.2.0" });
+  const emailLogin=await fetch("http://127.0.0.1:"+apiPort+"/api/v1/auth/login",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({companySlug:"demo",email:"test@example.com",password:"ExamplePassword123!"})});
+  assert.equal(emailLogin.status,403,"Email login must be disabled outside test");
   const allowed = await fetch(url, { headers: { Origin: origin } });
   assert.equal(allowed.headers.get("access-control-allow-origin"), origin);
   const denied = await fetch(url, { headers: { Origin: "https://untrusted.invalid" } });

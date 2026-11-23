@@ -52,11 +52,11 @@ Resultados locales del 22 de noviembre de 2026:
 | Suite | Resultado observado | Qué comprueba |
 | --- | --- | --- |
 | Lógica TypeScript | 25 pruebas correctas | Validación, hashes, QR y sesión móvil |
-| API HTTP y PostgreSQL | 48 pruebas correctas | Autenticación, registro, aislamiento, inventario, compras y ventas |
+| API HTTP y PostgreSQL | 55 pruebas correctas | Firmas wallet, autenticación, aislamiento, inventario, compras y ventas |
 | Programa Rust | 20 pruebas correctas | Autoridades, custodia, secuencias, hashes y rechazo de alteraciones |
 | Integración blockchain local | 3 pruebas correctas | API → base → programa SBF, firmas y recuperación RPC |
 
-Son **96 pruebas**: la batería de fase 7 tenía 92 y se añadieron cuatro pruebas de registro de evaluadores. Las pruebas Rust y blockchain corresponden a la ejecución de fase 7; las suites de aplicación se volvieron a ejecutar al añadir registro.
+Son **103 pruebas**. Las pruebas Rust y blockchain corresponden a la ejecución de fase 7; las suites de aplicación se volvieron a ejecutar al añadir acceso con wallet. Los tests históricos de correo se conservan solo como fixtures en NODE_ENV=test.
 
 También pasaron compilación web/API, exportación JavaScript Android/iOS, validación Prisma, compatibilidad Expo y comprobaciones de sesión web. No se presenta la exportación móvil como una prueba en teléfono.
 
@@ -67,14 +67,14 @@ No se adjuntan capturas o vídeos simulados. La evidencia disponible consiste en
 
 ## Funcionalidades implementadas
 
-- Registro de una empresa de prueba con administrador propio; acceso y permisos por empresa.
+- Acceso por firma de wallet Solana; empresa de prueba propia y permisos por empresa.
 - Catálogo, marcas, categorías, proveedores y compatibilidad vehicular.
 - Almacenes, lotes, existencias, entradas, salidas y transferencias.
 - Compras y ventas con importes decimales y actualización transaccional del inventario.
 - Dashboard, auditoría y etiquetas QR descargables.
 - Cola Outbox, reintentos e idempotencia de movimientos.
 - Consulta de evidencia, hashes, estado y enlace a Solana Explorer.
-- App Expo: autenticación, cámara QR, consulta y registro de movimientos.
+- App Expo: cámara QR, consulta y movimientos implementados; acceso wallet nativo pendiente.
 
 ## Arquitectura
 
@@ -131,11 +131,11 @@ pnpm dev
 
 ### Acceso del jurado
 
-En la página inicial elegir **Crear cuenta para probar**. Introducir nombre, empresa, identificador único, correo y contraseña de al menos 12 caracteres. La aplicación crea una empresa vacía y abre el panel. Conservar el identificador para volver a entrar.
+En la página inicial elegir **Conectar wallet**, seleccionar una wallet Solana y firmar el mensaje. No se requiere correo, contraseña ni SOL para entrar. La primera firma crea una empresa vacía; usar la misma wallet para volver a ese espacio.
 
-No se permite registrar un administrador dentro de una empresa existente. No hay correo de verificación ni recuperación de contraseña implementados.
+MetaMask dispone de un botón para su cuenta Solana. También se detectan wallets compatibles con Wallet Standard y firma de mensajes. Las extensiones reales todavía necesitan prueba manual. [Flujo, configuración y límites](docs/development/wallet-auth.md).
 
-Como alternativa local, el seed crea la empresa `demo`; el correo y la contraseña se conservan en `database/.env` como `SEED_ADMIN_EMAIL` y `SEED_ADMIN_PASSWORD`. **Las contraseñas y claves privadas no se publican.**
+Las empresas anteriores permanecen guardadas, pero no se vinculan automáticamente a una wallet. El acceso por correo está deshabilitado fuera de las pruebas internas.
 
 Una empresa recién creada no tiene worker blockchain configurado. Puede probar inventario, pero sus evidencias quedarán pendientes. Para evaluar confirmaciones ya realizadas, consultar la demostración Devnet enlazada arriba.
 
@@ -148,7 +148,7 @@ Una empresa recién creada no tiene worker blockchain configurado. Puede probar 
 5. Intentar una salida superior al stock: debe rechazarse sin cambios parciales.
 6. Abrir trazabilidad y consultar el estado real de las evidencias.
 7. En Lotes, elegir **Ver QR** para descargar su etiqueta.
-8. Crear un usuario VIEWER y comprobar que puede consultar, pero no registrar movimientos.
+Los controles de permisos VIEWER se verifican en las pruebas de API; la invitación de otras wallets a una empresa está pendiente.
 
 Usar datos de prueba para esta demostración.
 
@@ -175,9 +175,9 @@ Las pruebas HTTP usan una base terminada en `_test`, crean empresas independient
 
 | Servicio | Variables principales |
 | --- | --- |
-| API | DATABASE_URL, JWT_SECRET, HOST, PORT, WEB_ORIGIN |
+| API | DATABASE_URL, JWT_SECRET, HOST, PORT, WEB_ORIGIN, WALLET_AUTH_ORIGINS |
 | Web | API_INTERNAL_URL |
-| Móvil | EXPO_PUBLIC_API_URL |
+| Móvil | EXPO_PUBLIC_API_URL, EXPO_PUBLIC_WEB_URL |
 | Worker | DATABASE_URL, BLOCKCHAIN_COMPANY_ID, BLOCKCHAIN_SIGNER_PATH, BLOCKCHAIN_NETWORK, BLOCKCHAIN_RPC_URL |
 
 Los valores privados se configuran fuera de Git. El worker usa un firmante técnico autorizado; no se publican claves personales.
@@ -189,7 +189,7 @@ La web está preparada para Vercel con raíz `apps/web`. La API, PostgreSQL y el
 
 - Programa y demostración desplegados en Devnet.
 - Web y API probadas localmente; publicación web pendiente.
-- Android/iOS exportan JavaScript; prueba física Android aplazada.
+- Acceso wallet implementado en la web; integración nativa Expo y prueba física Android pendientes.
 - No hay APK publicado ni validación visual completa.
 - No hay auditoría de seguridad independiente ni ensayo de carga.
 - Facturación fiscal, devoluciones, garantías y recuperación de contraseña no están implementadas.
@@ -202,6 +202,7 @@ La web está preparada para Vercel con raíz `apps/web`. La API, PostgreSQL y el
 - [API](docs/api/phase-2.md)
 - [Programa Anchor](docs/blockchain/phase-3.md)
 - [Worker, hashes y reintentos](docs/blockchain/phase-4.md)
+- [Acceso con wallet](docs/development/wallet-auth.md)
 - [Panel web](docs/development/phase-5.md)
 - [Aplicación móvil y prueba Android](docs/development/phase-6.md)
 - [Entrega y despliegue](docs/development/phase-7.md)

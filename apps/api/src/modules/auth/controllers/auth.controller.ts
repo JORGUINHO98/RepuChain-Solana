@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Header, HttpCode, Inject, Post } from "@nestjs/common";
+import { ForbiddenException, Body, Controller, Get, Header, HttpCode, Inject, Post } from "@nestjs/common";
 import { Throttle } from "@nestjs/throttler";
 import { AuthService } from "../services/auth.service";
 import { CurrentUser, Public } from "../../../common/auth.decorators";
@@ -10,10 +10,10 @@ export class AuthController {
   constructor(@Inject(AuthService) private readonly auth: AuthService) {}
   @Public() @Post("register") @Header("Cache-Control","no-store")
   @Throttle({default:{limit:5,ttl:3600000}})
-  register(@Body(new ZodPipe(registerSchema)) input:RegisterInput){return this.auth.register(input);}
+  register(@Body(new ZodPipe(registerSchema)) input:RegisterInput){if(process.env.NODE_ENV!=="test")throw new ForbiddenException("Usa el acceso con wallet");return this.auth.register(input);}
   @Public() @Post("login") @HttpCode(200) @Header("Cache-Control", "no-store")
   @Throttle({ default: { limit: 10, ttl: 60000 } })
-  login(@Body(new ZodPipe(loginSchema)) input: LoginInput) { return this.auth.login(input); }
+  login(@Body(new ZodPipe(loginSchema)) input: LoginInput) { if(process.env.NODE_ENV!=="test")throw new ForbiddenException("Usa el acceso con wallet");return this.auth.login(input); }
   @Public() @Post("refresh") @HttpCode(200) @Header("Cache-Control", "no-store")
   @Throttle({ default: { limit: 20, ttl: 60000 } })
   refresh(@Body(new ZodPipe(refreshSchema)) input: { refreshToken: string }) { return this.auth.refresh(input.refreshToken); }
