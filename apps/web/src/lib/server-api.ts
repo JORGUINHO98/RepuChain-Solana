@@ -10,7 +10,9 @@ const base=()=>{
   let url:URL;
   try{url=new URL(configured);}catch{throw new ApiConfigurationError("API_INTERNAL_URL debe ser una URL HTTPS válida terminada en /api/v1.");}
   const path=url.pathname.replace(/\/+$/,"");
-  if(url.protocol!=="https:"||["localhost","127.0.0.1","[::1]"].includes(url.hostname)||!path.endsWith("/api/v1"))throw new ApiConfigurationError("API_INTERNAL_URL debe apuntar por HTTPS a una API accesible y terminar en /api/v1.");
+  const loopback=["localhost","127.0.0.1","[::1]"].includes(url.hostname);
+  const localHttp=!process.env.VERCEL&&url.protocol==="http:"&&loopback;
+  if((url.protocol!=="https:"&&!localHttp)||(process.env.VERCEL==="1"&&loopback)||!path.endsWith("/api/v1"))throw new ApiConfigurationError("API_INTERNAL_URL debe apuntar por HTTPS a una API accesible y terminar en /api/v1.");
   return url.origin+path;
  }
  return configured??process.env.NEXT_PUBLIC_API_URL??"http://127.0.0.1:4000/api/v1";
