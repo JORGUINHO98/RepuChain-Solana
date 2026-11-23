@@ -31,4 +31,27 @@ describe("web API upstream configuration",()=>{
    expect.objectContaining({cache:"no-store"}),
   );
  });
+
+ it("allows an HTTP loopback API for a local production smoke test",async()=>{
+  vi.stubEnv("NODE_ENV","production");
+  vi.stubEnv("VERCEL",undefined);
+  vi.stubEnv("API_INTERNAL_URL","http://127.0.0.1:4000/api/v1");
+  const fetcher=vi.fn().mockResolvedValue(new Response("{}",{status:200}));
+  vi.stubGlobal("fetch",fetcher);
+
+  await upstream("/health");
+
+  expect(fetcher).toHaveBeenCalledWith(
+   "http://127.0.0.1:4000/api/v1/health",
+   expect.objectContaining({cache:"no-store"}),
+  );
+ });
+
+ it("rejects an HTTP loopback API on Vercel",async()=>{
+  vi.stubEnv("NODE_ENV","production");
+  vi.stubEnv("VERCEL","1");
+  vi.stubEnv("API_INTERNAL_URL","http://127.0.0.1:4000/api/v1");
+
+  await expect(upstream("/health")).rejects.toThrow("HTTPS");
+ });
 });
