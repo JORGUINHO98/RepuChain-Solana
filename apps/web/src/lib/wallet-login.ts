@@ -17,10 +17,13 @@ export function waitForWallet<T>(operation:()=>Promise<T>,signal:AbortSignal,tim
 }
 export function walletError(error:unknown):string{
  const message=error instanceof Error?error.message:String(error??"");
- if(/RPCErr53|Transport request timed out|WALLET_TIMEOUT|timed?\s*out/i.test(message))return "La wallet no respondió a tiempo. Abre y desbloquea la extensión, revisa sus solicitudes pendientes y vuelve a intentarlo. Si usas MetaMask, comprueba que tenga una cuenta Solana.";
+ if(/RPCErr53|Transport request timed out|WALLET_TIMEOUT|timed?\s*out/i.test(message))return "La wallet no respondió a tiempo. Abre y desbloquea la wallet seleccionada, revisa sus solicitudes pendientes y vuelve a intentarlo.";
  if(/reject|denied|cancel|4001/i.test(message))return "Solicitud cancelada. No se completó el acceso. Cierra también cualquier solicitud pendiente en la wallet antes de reintentar.";
  if(message==="Failed to fetch")return "No se pudo conectar con el servidor de autenticación. Comprueba que RepuChain esté iniciado.";
  return message||"No se pudo conectar con la wallet.";
+}
+export function chooseBraveWallet<T extends {name:string}>(wallets:readonly T[]):T|undefined{
+ return wallets.find(wallet=>/^brave(?: wallet)?$/i.test(wallet.name));
 }
 export function chooseMetaMask<T extends {name:string}>(wallets:readonly T[]):T|undefined{
  return wallets.find(wallet=>/metamask/i.test(wallet.name));
