@@ -1,6 +1,20 @@
 import {NextRequest,NextResponse} from "next/server";
 export const COOKIE="repuchain_access";
-const base=()=>process.env.API_INTERNAL_URL??process.env.NEXT_PUBLIC_API_URL??"http://127.0.0.1:4000/api/v1";
+export class ApiConfigurationError extends Error{
+ constructor(message:string){super(message);this.name="ApiConfigurationError";}
+}
+const base=()=>{
+ const configured=process.env.API_INTERNAL_URL;
+ if(process.env.NODE_ENV==="production"){
+  if(!configured)throw new ApiConfigurationError("API_INTERNAL_URL no está configurada. Despliega la API y configura su URL HTTPS terminada en /api/v1 en Vercel.");
+  let url:URL;
+  try{url=new URL(configured);}catch{throw new ApiConfigurationError("API_INTERNAL_URL debe ser una URL HTTPS válida terminada en /api/v1.");}
+  const path=url.pathname.replace(/\/+$/,"");
+  if(url.protocol!=="https:"||["localhost","127.0.0.1","[::1]"].includes(url.hostname)||!path.endsWith("/api/v1"))throw new ApiConfigurationError("API_INTERNAL_URL debe apuntar por HTTPS a una API accesible y terminar en /api/v1.");
+  return url.origin+path;
+ }
+ return configured??process.env.NEXT_PUBLIC_API_URL??"http://127.0.0.1:4000/api/v1";
+};
 export function sameOrigin(request:NextRequest){try{const origin=new URL(request.headers.get("origin")??"");return origin.host===request.headers.get("host")&&origin.protocol===request.nextUrl.protocol;}catch{return false;}}
 export function json(body:unknown,status=200){return NextResponse.json(body,{status,headers:{"Cache-Control":"no-store"}});}
 export async function upstream(path:string,options:RequestInit={}){
