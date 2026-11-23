@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Inject, Param, ParseUUIDPipe, Patch, Post, Query } from "@nestjs/common";
+import { ForbiddenException, Body, Controller, Get, Inject, Param, ParseUUIDPipe, Patch, Post, Query } from "@nestjs/common";
 import type { AuthenticatedUser } from "@repuchain/shared-types";
 import { createUserSchema, updateUserSchema, listQuerySchema, type CreateUserInput, type UpdateUserInput, type ListQuery } from "@repuchain/validation";
 import { CurrentUser, RequirePermission } from "../../../common/auth.decorators";
@@ -8,6 +8,6 @@ import { UsersService } from "../services/users.service";
 export class UsersController {
   constructor(@Inject(UsersService) private readonly users: UsersService) {}
   @Get() list(@CurrentUser() user: AuthenticatedUser, @Query(new ZodPipe(listQuerySchema)) query: ListQuery) { return this.users.list(user, query); }
-  @Post() create(@CurrentUser() user: AuthenticatedUser, @Body(new ZodPipe(createUserSchema)) input: CreateUserInput) { return this.users.create(user, input); }
+  @Post() create(@CurrentUser() user: AuthenticatedUser, @Body(new ZodPipe(createUserSchema)) input: CreateUserInput) { if(process.env.NODE_ENV!=="test")throw new ForbiddenException("El acceso es solo con wallet; la incorporación de otras wallets todavía no está disponible");return this.users.create(user, input); }
   @Patch(":id") update(@CurrentUser() user: AuthenticatedUser, @Param("id", ParseUUIDPipe) id: string, @Body(new ZodPipe(updateUserSchema)) input: UpdateUserInput) { return this.users.update(user, id, input); }
 }

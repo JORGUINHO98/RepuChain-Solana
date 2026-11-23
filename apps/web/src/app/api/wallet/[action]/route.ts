@@ -4,8 +4,10 @@ const CHALLENGE="repuchain_wallet_challenge";
 export async function POST(request:NextRequest,{params}:{params:Promise<{action:string}>}){
  if(!sameOrigin(request))return json({message:"Origen no permitido"},403);
  const {action}=await params;if(!["challenge","verify"].includes(action))return json({message:"Ruta inválida"},404);
+ let body:Record<string,unknown>;
+ try{const parsed:unknown=await request.json();if(!parsed||typeof parsed!=="object"||Array.isArray(parsed))return json({message:"Envía un objeto JSON válido"},400);body=parsed as Record<string,unknown>;}catch{return json({message:"JSON inválido"},400);}
  try{
-  const body=await request.json();const origin=request.headers.get("origin")!;
+  const origin=request.headers.get("origin")!;
   if(action==="verify"&&(!body.id||request.cookies.get(CHALLENGE)?.value!==body.id))return json({message:"Vuelve a conectar tu wallet para iniciar sesión"},401);
   const response=await upstream("/auth/wallet/"+action,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(action==="challenge"?{address:body.address,origin}:{id:body.id,signature:body.signature,origin})});
   const data=await response.json();if(!response.ok)return json({message:data.message??"No se pudo autenticar la wallet"},response.status);

@@ -6,6 +6,7 @@ const call=(path,options={})=>fetch(origin+path,{...options,headers:{"Content-Ty
 assert.equal((await call("/api/session")).status,401);
 assert.equal((await call("/api/backend/dashboard")).status,401);
 assert.equal((await call("/api/session",{method:"POST",body:"{}"})).status,403);
+for(const body of ["{","null","[]","42"]){assert.equal((await call("/api/wallet/challenge",{method:"POST",body})).status,400);}
 const pair=generateKeyPairSync("ed25519");
 const address=getAddressDecoder().decode(pair.publicKey.export({format:"der",type:"spki"}).subarray(-32));
 assert.equal((await call("/api/wallet/challenge",{method:"POST",headers:{Origin:"https://foreign.invalid"},body:JSON.stringify({address})})).status,403);
@@ -21,6 +22,9 @@ assert.ok(cookieHeader?.includes("HttpOnly"));assert.ok(cookieHeader?.includes("
 const Cookie=cookieHeader.split(";")[0];
 try{
  assert.equal((await call("/api/session",{headers:{Cookie}})).status,200);
+ const roleResponse=await call("/api/backend/roles",{headers:{Cookie}});assert.equal(roleResponse.status,200);const roles=await roleResponse.json();
+ const role=(Array.isArray(roles)?roles:roles.items).find(r=>r.name==="VIEWER");assert.ok(role);
+ const emailUser=await call("/api/backend/users",{method:"POST",headers:{Cookie},body:JSON.stringify({name:"Usuario de prueba",email:"disabled@example.com",password:"ExamplePassword123!",roleId:role.id})});assert.equal(emailUser.status,403,"No crear usuarios que no pueden entrar");
  for(const path of ["dashboard","products","inventory","purchases","sales","blockchain/evidence"]){
   const r=await call("/api/backend/"+path,{headers:{Cookie}});assert.equal(r.status,200,path);assert.equal(r.headers.get("cache-control"),"no-store");
  }
