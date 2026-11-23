@@ -14,7 +14,7 @@ Solo se aceptan firmas del mensaje UTF-8 exacto. Una cuenta Ethereum 0x no sirve
 ## Configuración
 Aplicar `pnpm db:migrate` y generar el cliente con `pnpm db:generate`.
 
-En la API, configurar `WALLET_AUTH_ORIGINS` con los orígenes exactos autorizados, separados por comas, sin barra final. Por ejemplo: `https://tu-app.vercel.app`. Si se omite, se usa `WEB_ORIGIN`. No se permiten comodines. En desarrollo también se permiten localhost y 127.0.0.1 en el puerto 3000.
+En la API, configurar `WALLET_AUTH_ORIGINS` con los orígenes exactos autorizados, separados por comas, sin barra final. Por ejemplo: `https://tu-app.vercel.app`. Si se omite, se usa `WEB_ORIGIN`. No se permiten comodines. En desarrollo se permite HTTP desde `localhost`, `127.0.0.1` y `[::1]` en cualquier puerto, para admitir puertos alternativos cuando el 3000 está ocupado.
 
 Las rutas de correo de la API devuelven 403 fuera de NODE_ENV=test. El entorno test mantiene los fixtures históricos de permisos. Nunca publicar la API con NODE_ENV=test. La ruta web anterior devuelve 403 en todos los entornos.
 

@@ -11,6 +11,13 @@ const signature=()=>sign(null,Buffer.from(message),pair.privateKey).toString("ba
 it("emite un reto ligado a origen, wallet y caducidad",async()=>{
  const r=await request("POST","/auth/wallet/challenge",{address,origin},"");expect(r.status).toBe(201);id=r.body.id;message=r.body.message;expect(message).toContain(address);expect(message).toContain(origin);
 });
+it("permite puertos alternativos solo para orígenes locales en desarrollo",async()=>{
+ const localOrigin="http://127.0.0.1:3002";
+ const local=await request("POST","/auth/wallet/challenge",{address,origin:localOrigin},"");
+ expect(local.status).toBe(201);expect(local.body.message).toContain(localOrigin);
+ const external=await request("POST","/auth/wallet/challenge",{address,origin:"https://evil.invalid"},"");
+ expect(external.status).toBe(400);
+});
 it("rechaza una firma ajena sin consumir el reto",async()=>{
  const other=generateKeyPairSync("ed25519");
  expect((await request("POST","/auth/wallet/verify",{id,origin,signature:sign(null,Buffer.from(message),other.privateKey).toString("base64")},"")).status).toBe(401);
