@@ -61,3 +61,16 @@ Las confirmaciones se presentan únicamente cuando el worker las verifica.
 No se enviaron fondos ni transacciones nuevas a Devnet en esta fase.
 No hay APK, publicación en tiendas, facturación fiscal, devoluciones ni garantías. Esas funciones del objetivo general permanecen fuera de la implementación actual.
 Falta definir el alojamiento de API/base/worker y publicar la web.
+
+## Publicación web en Vercel · 22 de noviembre de 2026
+
+Proyecto: repuchain-solana. URL: https://repuchain-solana.vercel.app.
+GitHub conectado a main, raíz apps/web, Node 24.x y acceso a paquetes fuera de la raíz.
+.vercelignore excluye secretos y artefactos locales de las subidas por CLI.
+
+La interfaz se publica por separado. No se ha alojado la API ni PostgreSQL. Para habilitar acceso e inventario públicos:
+1. Alojar Nest y PostgreSQL, aplicar migraciones y configurar DATABASE_URL y JWT_SECRET en la API.
+2. Configurar WEB_ORIGIN y WALLET_AUTH_ORIGINS con https://repuchain-solana.vercel.app en la API.
+3. Configurar API_INTERNAL_URL en Vercel con la URL HTTPS de la API terminada en /api/v1 y volver a desplegar.
+4. Comprobar firma wallet y operaciones desde la URL pública.
+El worker requiere alojamiento y su firmante técnico aparte.

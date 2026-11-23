@@ -13,7 +13,7 @@ Proyecto final del **Advanced Bootcamp — Solana Engineering Track**. RepuChain
 | Program ID | `3hgkgx5V7UgU1Dac8R6ZCx2ZYs1PeHPUphFgRmG52GWv` |
 | Código del programa | [declare_id! y programa Rust](blockchain/programs/repu_chain/src/lib.rs) |
 | Programa desplegado | [Abrir en Solana Explorer](https://explorer.solana.com/address/3hgkgx5V7UgU1Dac8R6ZCx2ZYs1PeHPUphFgRmG52GWv?cluster=devnet) |
-| Web pública | Pendiente de despliegue; ejecución local disponible |
+| Web pública | [RepuChain en Vercel](https://repuchain-solana.vercel.app) — interfaz publicada; API y base pública pendientes |
 
 El Program ID identifica el programa, no una wallet de usuario.
 
@@ -188,7 +188,7 @@ La web está preparada para Vercel con raíz `apps/web`. La API, PostgreSQL y el
 ## Estado y límites
 
 - Programa y demostración desplegados en Devnet.
-- Web y API probadas localmente; publicación web pendiente.
+- Web publicada en https://repuchain-solana.vercel.app. API y PostgreSQL todavía locales: el acceso wallet público no funciona hasta alojarlos y configurar API_INTERNAL_URL.
 - Acceso wallet implementado en la web; integración nativa Expo y prueba física Android pendientes.
 - No hay APK publicado ni validación visual completa.
 - No hay auditoría de seguridad independiente ni ensayo de carga.

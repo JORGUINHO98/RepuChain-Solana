@@ -1,0 +1,17 @@
+**/node_modules/**
+**/.env
+**/.env.*
+**/.keys/**
+**/*-keypair.json
+**/.turbo/**
+**/.next/**
+**/dist/**
+**/.expo/**
+**/*.log
+**/*.tsbuildinfo
+.vercel/**
+.git/**
+target/**
+test-ledger/**
+reports/**
+database/src/generated/**
