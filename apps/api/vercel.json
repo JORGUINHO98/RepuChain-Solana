@@ -1,0 +1,6 @@
+{
+  "framework": "nestjs",
+  "installCommand": "cd ../.. && pnpm install --frozen-lockfile",
+  "buildCommand": "cd ../.. && pnpm exec turbo run build --filter=@repuchain/api",
+  "regions": ["iad1"]
+}
