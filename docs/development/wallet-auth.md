@@ -29,3 +29,8 @@ Las rutas de correo de la API devuelven 403 fuera de NODE_ENV=test. El entorno t
 `tests/e2e/wallet.test.ts` verifica firmas, caducidad, origen, reutilización y continuidad del espacio. `pnpm smoke` verifica el flujo HTTP completo con una clave efímera de prueba, cookies y revocación. Esto no sustituye la prueba manual de conexión con una extensión.
 
 Para la prueba manual: abrir la web, conectar y firmar; comprobar el panel; cerrar sesión; repetir con la misma wallet y comprobar que conserva el espacio. Cancelar una firma debe dejar al usuario fuera del panel.
+
+## Conexiones que no responden
+El selector usa primero MetaMask detectado por Wallet Standard; el SDK queda como alternativa. Solo muestra una opción MetaMask. La interfaz diferencia conexión, preparación del reto, firma y verificación. Cada operación de wallet tiene un límite de 60 segundos y el usuario puede cancelar la espera; una respuesta tardía no continúa el flujo cancelado. Cancelar en RepuChain no cierra la ventana de la extensión: cerrar también esa solicitud antes de reintentar.
+
+RPCErr53 / Transport request timed out se presenta como un problema de comunicación con la wallet. No demuestra un fallo de PostgreSQL ni permite afirmar que se completó una firma. La corrección se validó con pruebas automatizadas de selección, timeout y cancelación; la extensión MetaMask real requiere prueba manual. Las alertas de seguridad de la wallet no deben ignorarse.
