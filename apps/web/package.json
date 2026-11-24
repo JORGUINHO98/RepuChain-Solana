@@ -9,7 +9,6 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@metamask/connect-solana": "2.1.1",
     "@repuchain/shared-types": "workspace:*",
     "@repuchain/ui": "workspace:*",
     "@repuchain/utils": "workspace:*",

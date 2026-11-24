@@ -4,6 +4,30 @@
 
 Proyecto final del **Advanced Bootcamp — Solana Engineering Track**. RepuChain administra repuestos, lotes y movimientos de inventario y registra evidencias criptográficas en Solana. PostgreSQL conserva los datos comerciales; la blockchain permite comprobar el historial registrado.
 
+## Ruta, propósito y aporte propio
+
+**Ruta elegida: proyecto propio.** Caso de uso: inventario y trazabilidad de repuestos automotrices. Se utilizan Anchor, Solana Kit, Next.js, NestJS y Prisma como herramientas; la entrega no se presenta como una copia del registro de ventas guiado.
+
+El aporte funcional es conectar inventario por empresa con evidencia encadenada por lote: cada recepción y movimiento genera un hash, una secuencia y una cuenta PDA verificable. La cola Outbox permite reintentar sin duplicar movimientos y evita marcar como confirmada una operación sin comprobar su transacción y cuenta. Compras y ventas actualizan stock de forma transaccional. El acceso se autentica mediante una firma de mensaje de Brave Wallet.
+
+El autor debe revisar y poder explicar el código y las decisiones, incluidos los cambios realizados con asistencia de IA. Las dependencias y sus versiones constan en los manifiestos y lockfiles.
+
+## Correspondencia con los criterios de evaluación
+
+| Criterio | Implementación y comprobación |
+| --- | --- |
+| Programa, frontend, IDL y cliente | [Programa Anchor](blockchain/programs/repu_chain/src/lib.rs), [frontend](apps/web/src/components/panel/workspace.tsx), [IDL](blockchain/idl/repu_chain.json), [cliente e instrucciones](packages/blockchain-client/src/program.ts). `pnpm blockchain:test` reconstruye el programa y comprueba IDL y Program ID. |
+| Cuentas relacionadas y PDAs | Company, Operator, Batch y MovementEvidence; semillas incluyen autoridad, empresa, lote e identificador de evento. [Definiciones](blockchain/programs/repu_chain/src/state) y [derivación de PDAs](packages/blockchain-client/src/program.ts). |
+| Creación y lectura | initialize_company y register_batch crean cuentas; el cliente lee cuentas y verify_batch contrasta el estado. [Pruebas de ciclo de vida](blockchain/programs/repu_chain/tests/lifecycle.rs). |
+| Modificación | record_movement actualiza secuencia y hash del lote; transfer_custody cambia custodio con autorización. Las pruebas rechazan secuencias y hashes anteriores incorrectos. |
+| Autoridad y pertenencia | Firmantes, operadores activos, relaciones has_one y semillas PDA se validan en Rust. Las pruebas rechazan operadores ajenos, revocados y cuentas cruzadas. |
+| Baja condicionada | revoke_operator aplica baja lógica mediante active=false; solo la autoridad puede revocar y no puede revocarse a sí misma. Las pruebas `revocation_takes_effect_and_only_authority_can_restore_operator` y `authority_cannot_revoke_itself` demuestran éxito y rechazo. No se implementa cierre físico ni devolución de rent. |
+| Firma, confirmación, actualización y errores | Brave firma el reto de acceso. El worker firma las transacciones Solana, espera confirmación y comprueba cuentas antes de mostrar CONFIRMED. Se documentan firmas inválidas, expiración, reintentos y stock insuficiente. |
+| Flujo frontend → programa | Panel → API → PostgreSQL/Outbox → worker → Devnet → panel de trazabilidad. Seguir la [demo local para evaluación](docs/development/bootcamp-demo.md). |
+| Evidencia verificable | Program ID, recepción y movimiento Devnet enlazados abajo; las pruebas locales cubren permisos, rechazo y baja. |
+
+La baja lógica es la equivalencia propuesta para la ruta propia. Las transacciones comerciales se firman con una autoridad técnica configurada en el worker, no directamente con la wallet de acceso. Revocación y custodia están disponibles en Rust/cliente y pruebas; no tienen pantalla de administración. La evaluación final corresponde al equipo del Bootcamp.
+
 ## Datos de entrega
 
 | Dato | Valor |
@@ -13,7 +37,7 @@ Proyecto final del **Advanced Bootcamp — Solana Engineering Track**. RepuChain
 | Program ID | `3hgkgx5V7UgU1Dac8R6ZCx2ZYs1PeHPUphFgRmG52GWv` |
 | Código del programa | [declare_id! y programa Rust](blockchain/programs/repu_chain/src/lib.rs) |
 | Programa desplegado | [Abrir en Solana Explorer](https://explorer.solana.com/address/3hgkgx5V7UgU1Dac8R6ZCx2ZYs1PeHPUphFgRmG52GWv?cluster=devnet) |
-| Web pública | [RepuChain en Vercel](https://repuchain-solana.vercel.app) — interfaz publicada; API y base pública pendientes |
+| Demo de evaluación | Ejecución local con Brave Wallet y programa en Devnet; no requiere hosting |
 
 El Program ID identifica el programa, no una wallet de usuario.
 
@@ -47,16 +71,16 @@ Lote de la demostración: `39c9648b-3503-4fd4-89d3-afcd8d71e490`.
 
 ### 3. Pruebas automatizadas
 
-Resultados locales del 22 de noviembre de 2026:
+Resultados locales del 23 de noviembre de 2026:
 
 | Suite | Resultado observado | Qué comprueba |
 | --- | --- | --- |
-| Lógica TypeScript | 25 pruebas correctas | Validación, hashes, QR y sesión móvil |
-| API HTTP y PostgreSQL | 55 pruebas correctas | Firmas wallet, autenticación, aislamiento, inventario, compras y ventas |
+| Lógica TypeScript | 42 pruebas correctas | Validación, hashes, QR y sesión móvil |
+| API HTTP y PostgreSQL | 56 pruebas correctas | Firmas wallet, autenticación, aislamiento, inventario, compras y ventas |
 | Programa Rust | 20 pruebas correctas | Autoridades, custodia, secuencias, hashes y rechazo de alteraciones |
 | Integración blockchain local | 3 pruebas correctas | API → base → programa SBF, firmas y recuperación RPC |
 
-Son **103 pruebas**. Las pruebas Rust y blockchain corresponden a la ejecución de fase 7; las suites de aplicación se volvieron a ejecutar al añadir acceso con wallet. Los tests históricos de correo se conservan solo como fixtures en NODE_ENV=test.
+Son **121 pruebas**, más tres vectores SHA-256 independientes. Las suites indicadas se ejecutaron localmente durante esta actualización. Los tests históricos de correo se conservan solo como fixtures en NODE_ENV=test. El binario recompilado mantiene el hash del comprobante de despliegue y el IDL correspondiente; no se actualizó el programa en Devnet.
 
 También pasaron compilación web/API, exportación JavaScript Android/iOS, validación Prisma, compatibilidad Expo y comprobaciones de sesión web. No se presenta la exportación móvil como una prueba en teléfono.
 
@@ -121,7 +145,6 @@ Configurar la conexión PostgreSQL en los archivos locales de entorno y crear la
 
 ```bash
 pnpm db:migrate
-pnpm db:seed
 pnpm dev
 ```
 
@@ -131,9 +154,9 @@ pnpm dev
 
 ### Acceso del jurado
 
-En la página inicial elegir **Conectar wallet**, seleccionar una wallet Solana y firmar el mensaje. No se requiere correo, contraseña ni SOL para entrar. La primera firma crea una empresa vacía; usar la misma wallet para volver a ese espacio.
+En la página inicial elegir **Conectar Brave Wallet** y firmar el mensaje con una cuenta Solana de Brave Wallet. No se requiere correo, contraseña ni SOL para entrar. La primera firma crea una empresa vacía; usar la misma wallet para volver a ese espacio.
 
-MetaMask dispone de un botón para su cuenta Solana. También se detectan wallets compatibles con Wallet Standard y firma de mensajes. Las extensiones reales todavía necesitan prueba manual. [Flujo, configuración y límites](docs/development/wallet-auth.md).
+La interfaz ofrece únicamente Brave Wallet. En Brave, seleccionar Brave Wallet como cartera predeterminada de Solana en Configuración > Web3. [Flujo, configuración y límites](docs/development/wallet-auth.md).
 
 Las empresas anteriores permanecen guardadas, pero no se vinculan automáticamente a una wallet. El acceso por correo está deshabilitado fuera de las pruebas internas.
 
@@ -188,7 +211,7 @@ La web está preparada para Vercel con raíz `apps/web`. La API, PostgreSQL y el
 ## Estado y límites
 
 - Programa y demostración desplegados en Devnet.
-- Web publicada en https://repuchain-solana.vercel.app. API y PostgreSQL todavía locales: el acceso wallet público no funciona hasta alojarlos y configurar API_INTERNAL_URL.
+- Entrega mediante GitHub y demo local. Los despliegues automáticos de Vercel están deshabilitados por decisión del autor.
 - Acceso wallet implementado en la web; integración nativa Expo y prueba física Android pendientes.
 - No hay APK publicado ni validación visual completa.
 - No hay auditoría de seguridad independiente ni ensayo de carga.

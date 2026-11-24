@@ -24,7 +24,7 @@ try{
     const server=createServer();server.listen(0,"127.0.0.1");await once(server,"listening");
     const port=server.address().port;await new Promise(resolve=>server.close(resolve));
     const base="http://127.0.0.1:"+port+"/api/v1";
-    api=spawn(process.execPath,["dist/main.js"],{cwd:"apps/api",env:{...process.env,PORT:String(port),HOST:"127.0.0.1",JWT_SECRET:randomBytes(48).toString("hex")},stdio:"ignore"});
+    api=spawn(process.execPath,["dist/main.js"],{cwd:"apps/api",env:{...process.env,NODE_ENV:"test",PORT:String(port),HOST:"127.0.0.1",JWT_SECRET:randomBytes(48).toString("hex")},stdio:"ignore"});
     let ready=false;
     for(let i=0;i<80;i++){
       if(api.exitCode!==null)throw new Error("Demo API did not start");

@@ -13,9 +13,14 @@ export class WalletService{
  private key(value:string){try{return Buffer.from(getAddressEncoder().encode(solanaAddress(value)));}catch{throw new BadRequestException("Dirección Solana inválida");}}
  private origin(value:string){
   const configured=(process.env.WALLET_AUTH_ORIGINS??process.env.WEB_ORIGIN??"http://localhost:3000").split(",").map(v=>v.trim());
-  if(process.env.NODE_ENV!=="production")configured.push("http://127.0.0.1:3000","http://localhost:3000");
-  if(!configured.includes(value))throw new BadRequestException("Origen de acceso no permitido");
-  return new URL(value);
+  let url:URL;
+  try{url=new URL(value);}catch{throw new BadRequestException("Origen de acceso no permitido");}
+  const localDevelopment=process.env.NODE_ENV!=="production"
+   &&url.protocol==="http:"
+   &&url.origin===value
+   &&["localhost","127.0.0.1","[::1]"].includes(url.hostname);
+  if(!configured.includes(value)&&!localDevelopment)throw new BadRequestException("Origen de acceso no permitido");
+  return url;
  }
  async challenge(address:string,origin:string){
   this.key(address);const url=this.origin(origin);const id=randomUUID(),now=new Date(),expires=new Date(now.getTime()+300000);

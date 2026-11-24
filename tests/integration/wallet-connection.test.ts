@@ -1,8 +1,9 @@
 import {afterEach,it,expect,vi} from "vitest";
-import {waitForWallet,walletError,chooseMetaMask,walletStageText} from "../../apps/web/src/lib/wallet-login";
+import {waitForWallet,walletError,chooseBraveWallet,walletStageText} from "../../apps/web/src/lib/wallet-login";
 afterEach(()=>vi.useRealTimers());
-it("selecciona MetaMask detectado sin confundirlo con Brave",()=>{
- const brave={name:"Brave Wallet"},meta={name:"MetaMask"};expect(chooseMetaMask([brave,meta])).toBe(meta);expect(chooseMetaMask([brave])).toBeUndefined();
+it("selecciona Brave Wallet y excluye otras wallets",()=>{
+ const brave={name:"Brave Wallet"},meta={name:"MetaMask Solana"};
+ expect(chooseBraveWallet([brave,meta])).toBe(brave);expect(chooseBraveWallet([meta])).toBeUndefined();
 });
 it("distingue conexión de firma",()=>{expect(walletStageText.connecting).not.toContain("firma");expect(walletStageText.signing).toContain("firma");});
 it("limita una operación que no responde",async()=>{
